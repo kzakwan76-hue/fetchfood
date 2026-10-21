@@ -24,8 +24,8 @@
 
 ## Milestone 3a: Supabase + profiles + roles + RLS
 - Created Supabase project, installed @supabase/supabase-js and @supabase/ssr
-- Added supabase\migrations\0001_profiles_roles.sql (ran in SQL Editor: [result])
-- Added scripts\test-supabase.mjs: [output]
-- git check-ignore .env.local: [output]
-- lint: [result] | build: [result]
-- Dashboard: profiles table with RLS [seen / not seen]
+- Added supabase\migrations\0001_profiles_roles.sql (ran in SQL Editor: [success no tables returned])
+- Added scripts\test-supabase.mjs: [it doesnt print your key]
+- git check-ignore .env.local: [.env.local]
+- lint: [> fetchfood@0.1.0 lint > eslint] | build: [> fetchfood@0.1.0 build > next build]
+- Dashboard: profiles table with RLS [seen]
