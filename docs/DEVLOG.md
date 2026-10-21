@@ -14,3 +14,10 @@
 **Limitations**
 - No database, accounts, or ordering yet.
 - Phone check covers mobile numbers only (03XX), not landlines.
+
+## Milestone 2: customer UI with sample data
+- Added lib\sample-data.ts, app\restaurants\page.tsx, app\restaurants\[slug]\page.tsx, scripts\test-data.mjs
+- test-data.mjs: [sample-data.ts: all checks passed]
+- lint: [> fetchfood@0.1.0 lint > eslint]
+- build: [ prerendered as static content]
+- Browser: [sample resturants lists]
