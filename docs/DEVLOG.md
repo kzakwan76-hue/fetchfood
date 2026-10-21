@@ -21,3 +21,11 @@
 - lint: [> fetchfood@0.1.0 lint > eslint]
 - build: [ prerendered as static content]
 - Browser: [sample resturants lists]
+
+## Milestone 3a: Supabase + profiles + roles + RLS
+- Created Supabase project, installed @supabase/supabase-js and @supabase/ssr
+- Added supabase\migrations\0001_profiles_roles.sql (ran in SQL Editor: [result])
+- Added scripts\test-supabase.mjs: [output]
+- git check-ignore .env.local: [output]
+- lint: [result] | build: [result]
+- Dashboard: profiles table with RLS [seen / not seen]
