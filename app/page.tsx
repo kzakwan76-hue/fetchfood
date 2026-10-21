@@ -1,69 +1,83 @@
-import Image from "next/image";
+const roadmap = [
+  { n: 1, title: "Foundation, branding, Pakistan helpers", done: true },
+  { n: 2, title: "Customer UI with sample restaurants & menus", done: false },
+  { n: 3, title: "Database & accounts", done: false },
+  { n: 4, title: "Menus, cart & checkout (cash on delivery)", done: false },
+  { n: 5, title: "Restaurant dashboard & orders", done: false },
+  { n: 6, title: "AI food assistant", done: false },
+  { n: 7, title: "Riders, delivery zones & admin", done: false },
+  { n: 8, title: "Testing, security & deployment", done: false },
+];
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6">
+      <header className="flex items-center justify-between">
+        <span className="text-2xl font-extrabold tracking-tight text-brand-600">
+          Fetch<span className="text-charcoal-900">Food</span>
+        </span>
+        <span className="rounded-full bg-charcoal-900 px-3 py-1 text-xs font-semibold text-white">
+          Milestone 1 build
+        </span>
+      </header>
+
+      <main className="flex-1">
+        <section className="py-12">
+          <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
+            Hungry, but your area is <span className="text-brand-600">“not serviceable”</span>?
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-4 text-lg text-charcoal-700">
+            FetchFood is being built to deliver from local restaurants, cafés and
+            home kitchens to neighbourhoods the big apps skip.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        </section>
+
+        <section
+          aria-labelledby="assistant-heading"
+          className="rounded-2xl border border-brand-200 bg-white p-5 shadow-sm"
+        >
+          <h2 id="assistant-heading" className="text-lg font-bold">
+            The FetchFood food assistant
+          </h2>
+          <p className="mt-2 text-charcoal-700">
+            Can&apos;t decide what to eat? A chatbot with a mild sarcastic streak
+            will help you choose, using only real menus from restaurants that
+            deliver to you.
+          </p>
+          <p className="mt-3 inline-block rounded-md bg-brand-100 px-2 py-1 text-sm font-semibold text-brand-700">
+            Not built yet: arrives in Milestone 6
+          </p>
+        </section>
+
+        <section aria-labelledby="roadmap-heading" className="mt-10">
+          <h2 id="roadmap-heading" className="text-lg font-bold">
+            Build progress
+          </h2>
+          <ol className="mt-3 space-y-2">
+            {roadmap.map((m) => (
+              <li
+                key={m.n}
+                className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm"
+              >
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
+                    m.done ? "bg-brand-500 text-white" : "bg-charcoal-900/10 text-charcoal-700"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {m.done ? "✓" : m.n}
+                </span>
+                <span className="font-medium">{m.title}</span>
+                <span className="sr-only">{m.done ? "(complete)" : "(not started)"}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
       </main>
+
+      <footer className="mt-12 border-t border-brand-200 pt-4 text-sm text-charcoal-700">
+        © FetchFood. Ordering is not live yet.
+      </footer>
     </div>
   );
 }
