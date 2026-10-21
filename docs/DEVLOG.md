@@ -29,3 +29,53 @@
 - git check-ignore .env.local: [.env.local]
 - lint: [> fetchfood@0.1.0 lint > eslint] | build: [> fetchfood@0.1.0 build > next build]
 - Dashboard: profiles table with RLS [seen]
+
+## Milestone 3b: auth (sign up, log in, log out, account)
+- Added lib\supabase\server.ts, lib\supabase\proxy.ts, proxy.ts, lib\auth-validation.ts, app\auth\actions.ts, components\auth-form.tsx, app\login, app\signup, app\account, scripts\test-auth.mjs
+- Dashboard: Confirm email turned OFF for development (turn ON again in M8)
+- test-auth / test-data / test-pk: [perfect]
+- lint: [> fetchfood@0.1.0 lint > eslint] | build: [> fetchfood@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 221ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ✓ agentFeedback
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.4s
+  Running TypeScript ...
+  Finished TypeScript in 3.6s ...
+  Collecting page data using 10 workers ...
+✓ Collecting page data using 10 workers in 1423ms
+  Generating static pages using 10 workers (0/13) ...
+  Generating static pages using 10 workers (3/13)
+  Generating static pages using 10 workers (6/13)
+  Generating static pages using 10 workers (9/13)
+✓ Generating static pages using 10 workers (13/13) in 1237ms
+  Finalizing page optimization ...
+✓ Finalizing page optimization in 37ms
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ◐ /account
+├ ○ /login
+├ ○ /restaurants
+├   /restaurants/[slug]
+│ ├ ◐ /restaurants/[slug]
+│ ├ ○ /restaurants/karahi-house
+│ ├ ○ /restaurants/burger-lab
+│ └ ◐ [+2 more paths]
+└ ○ /signup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+]
+- Browser steps 1-7: [sign up and login are working perfect after signing up you are directed to accounts page where you see your accounts details and you have delete account option too.]
