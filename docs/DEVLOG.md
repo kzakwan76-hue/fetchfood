@@ -79,3 +79,17 @@ Route (app)
 ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
 ]
 - Browser steps 1-7: [sign up and login are working perfect after signing up you are directed to accounts page where you see your accounts details and you have delete account option too.]
+
+## Milestone 4: catalog from DB, cart, COD checkout, server-side pricing
+- Migration 0002 (restaurants, menu_items, orders, order_items, RLS, place_order(), seed): [SQL result, row counts]
+- Files: lib\cart.ts, lib\cart-store.ts, lib\catalog.ts, components (add-to-cart, cart-bar, cart-view, clear-cart, checkout-form), app\cart, app\checkout, app\orders\[id], updated app\restaurants pages, scripts\test-cart.mjs, scripts\test-orders.mjs
+- test-cart: [perfect] | test-orders: [perfect] | test-auth/test-pk: [perfect]
+- lint: [perfect] | build: [same]
+- Browser steps 1-9: [everything went as planned]
+
+## Milestone 4 follow-ups
+- /restaurants/[slug] showed a "uncached data" blocking-route overlay: moved params + data read into a component inside <Suspense> with a skeleton: [overlay gone? yes/no]
+- npm run build: passes; static: / /cart /login /signup /restaurants; partial prerender: /account /checkout /orders/[id] /restaurants/[slug]
+- Migration 0003: minimum order set to Rs. 150 for all restaurants: [Table Editor check]
+- test-orders after change: [perfect]
+- Browser checks (Cola alone blocked / Fries allowed / checkout and order page): [everything worked out as planned]

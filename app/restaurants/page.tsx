@@ -1,17 +1,22 @@
 import Link from "next/link";
-import { restaurants } from "../../lib/sample-data";
+import { CartBar } from "../../components/cart-bar";
+import { getRestaurants } from "../../lib/catalog";
 import { formatPKR } from "../../lib/pk";
 
-export default function RestaurantsPage() {
+export default async function RestaurantsPage() {
+  const restaurants = await getRestaurants();
+
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/" className="text-sm font-semibold text-brand-600">
-        ← FetchFood
-      </Link>
+    <main className="mx-auto max-w-2xl px-4 py-6 pb-24">
+      <div className="flex items-center justify-between text-sm font-semibold text-brand-600">
+        <Link href="/">← FetchFood</Link>
+        <span className="flex gap-4">
+          <Link href="/cart">Cart</Link>
+          <Link href="/account">Account</Link>
+        </span>
+      </div>
       <h1 className="mt-3 text-2xl font-bold text-neutral-900">Restaurants</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        Sample data for now. Real restaurants arrive in later milestones.
-      </p>
+      <p className="mt-1 text-sm text-neutral-600">Sample restaurants for now, loaded from the database.</p>
 
       <ul className="mt-6 space-y-4">
         {restaurants.map((r) => (
@@ -36,13 +41,13 @@ export default function RestaurantsPage() {
                 {r.cuisine} · {r.area}
               </p>
               <p className="mt-2 text-sm text-neutral-700">
-                ~{r.etaMinutes} min · Delivery {formatPKR(r.deliveryFeePkr)} · Min order{" "}
-                {formatPKR(r.minOrderPkr)}
+                ~{r.etaMinutes} min · Delivery {formatPKR(r.deliveryFeePkr)} · Min order {formatPKR(r.minOrderPkr)}
               </p>
             </Link>
           </li>
         ))}
       </ul>
+      <CartBar />
     </main>
   );
 }
