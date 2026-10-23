@@ -150,3 +150,69 @@ Route (app)                          Revalidate  Expire
 ○  (Static)             prerendered as static content
 ◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content]
 - Browser steps 1-8: [Everything went smoothly]
+
+## Milestone 6a: assistant logic (no AI yet)
+**Built:** lib\assistant\types.ts, recommend.ts (rule-based fallback), guard.ts (no invented dishes/prices); scripts\test-assistant.mjs.
+
+**Decisions**
+- The AI will see a numbered menu and answer with item numbers; the guard maps numbers back to real items, so the cards always come from our data.
+- The guard drops unknown, closed and over-budget items, caps picks at 3, and rejects replies that state prices.
+- The rule-based assistant is the fallback when the AI is down or has no key, and costs nothing.
+
+**Results:** test-assistant: [all checks passed] | lint: [> fetchfood@0.1.0 lint > eslint] | build: [> fetchfood@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 290ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ✓ agentFeedback
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.7s
+  Running TypeScript ...
+  Finished TypeScript in 5.0s ...
+  Collecting page data using 11 workers ...
+✓ Collecting page data using 11 workers in 3.9s
+  Generating static pages using 11 workers (0/19) ...
+  Generating static pages using 11 workers (4/19)
+  Generating static pages using 11 workers (9/19)
+  Generating static pages using 11 workers (14/19)
+✓ Generating static pages using 11 workers (19/19) in 2.9s
+  Finalizing page optimization ...
+✓ Finalizing page optimization in 80ms
+
+Route (app)                          Revalidate  Expire
+┌ ○ /
+├ ○ /_not-found
+├ ◐ /account
+├ ○ /cart
+├ ◐ /checkout
+├ ◐ /dashboard
+├ ◐ /dashboard/menu
+├ ○ /login
+├ ◐ /orders
+├   /orders/[id]
+│ └ ◐ /orders/[id]
+├ ○ /restaurants                             1m      1h
+├   /restaurants/[slug]
+│ ├ ◐ /restaurants/[slug]
+│ ├ ○ /restaurants/biryani-junction          1m      1h
+│ ├ ○ /restaurants/burger-lab                1m      1h
+│ └ ◐ [+2 more paths]
+└ ○ /signup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+
+]
+
+**Limitations**
+- The guard cannot catch a dish name the AI writes in plain prose; the M6b prompt makes it use [[n]] markers instead.
+- The rule-based matching is keyword-based: it won't understand "something comforting".
+- No allergy data exists. The assistant must never claim a dish is allergy-safe.
