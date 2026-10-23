@@ -44,6 +44,12 @@ async function AccountDetails() {
         <Row label="Email" value={claims.email} />
         <Row label="Role" value={profile?.role} />
       </dl>
+      <div className="flex flex-wrap gap-4 text-sm font-semibold text-brand-600">
+        <Link href="/orders">My orders</Link>
+        {(profile?.role === "restaurant_owner" || profile?.role === "admin") && (
+          <Link href="/dashboard">Restaurant dashboard</Link>
+        )}
+      </div>
       {!profile && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
           Profile row not found. The sign-up trigger from M3a may not have run.

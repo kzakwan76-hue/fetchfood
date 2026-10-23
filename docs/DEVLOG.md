@@ -93,3 +93,60 @@ Route (app)
 - Migration 0003: minimum order set to Rs. 150 for all restaurants: [Table Editor check]
 - test-orders after change: [perfect]
 - Browser checks (Cola alone blocked / Fries allowed / checkout and order page): [everything worked out as planned]
+
+## Milestone 5: restaurant dashboard, order status, menu management, my orders
+- Migration 0004 (owner policies, column grants, update_order_status(), menu constraints): [SQL result]
+- Promoted test account to restaurant_owner and owner of karahi-house (manual SQL)
+- New: lib\order-status.ts, app\orders\actions.ts + page.tsx, app\dashboard (page, actions, menu\page), 6 components, scripts\test-dashboard.mjs; rewrote app\orders\[id]\page.tsx (cancel + clear cart only when ?placed=1)
+- test-dashboard: [perfect] | test-orders: [perfect] | test-cart: [perfect]
+- lint: [same] | build: [> fetchfood@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 205ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ✓ agentFeedback
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1457ms
+  Running TypeScript ...
+  Finished TypeScript in 2.8s ...
+  Collecting page data using 11 workers ...
+✓ Collecting page data using 11 workers in 2.3s
+  Generating static pages using 11 workers (0/19) ...
+  Generating static pages using 11 workers (4/19)
+  Generating static pages using 11 workers (9/19)
+  Generating static pages using 11 workers (14/19)
+✓ Generating static pages using 11 workers (19/19) in 2.1s
+  Finalizing page optimization ...
+✓ Finalizing page optimization in 59ms
+
+Route (app)                          Revalidate  Expire
+┌ ○ /
+├ ○ /_not-found
+├ ◐ /account
+├ ○ /cart
+├ ◐ /checkout
+├ ◐ /dashboard
+├ ◐ /dashboard/menu
+├ ○ /login
+├ ◐ /orders
+├   /orders/[id]
+│ └ ◐ /orders/[id]
+├ ○ /restaurants                             1m      1h
+├   /restaurants/[slug]
+│ ├ ◐ /restaurants/[slug]
+│ ├ ○ /restaurants/biryani-junction          1m      1h
+│ ├ ○ /restaurants/burger-lab                1m      1h
+│ └ ◐ [+2 more paths]
+└ ○ /signup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content]
+- Browser steps 1-8: [Everything went smoothly]

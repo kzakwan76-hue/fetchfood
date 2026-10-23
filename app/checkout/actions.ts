@@ -63,5 +63,5 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     if (error.message === "not_authenticated") redirect("/login");
     return fail(MESSAGES[error.message] ?? "Could not place your order. Please try again.");
   }
-  redirect(`/orders/${data}`);
+  redirect(`/orders/${data}?placed=1`);
 }

@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 import { formatPKR } from "../../../lib/pk";
+import { STATUS_LABEL } from "../../../lib/order-status";
+import { CancelOrderButton } from "../../../components/cancel-order-button";
 import { ClearCart } from "../../../components/clear-cart";
 
 type OrderRow = {
@@ -20,38 +22,35 @@ type OrderRow = {
   order_items: { item_name: string; unit_price_pkr: number; quantity: number }[];
 };
 
-const STATUS: Record<string, string> = {
-  placed: "Order placed",
-  accepted: "Accepted by the restaurant",
-  preparing: "Being prepared",
-  out_for_delivery: "Out for delivery",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ placed?: string }>;
 };
 
-export default function OrderPage({ params }: { params: Promise<{ id: string }> }) {
+export default function OrderPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto max-w-md px-4 py-6">
-      <Link href="/restaurants" className="text-sm font-semibold text-brand-600">
-        ← Restaurants
+      <Link href="/orders" className="text-sm font-semibold text-brand-600">
+        ← My orders
       </Link>
       <Suspense fallback={<p className="mt-6 text-neutral-600">Loading…</p>}>
-        <OrderDetails params={params} />
+        <OrderDetails params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
-async function OrderDetails({ params }: { params: Promise<{ id: string }> }) {
+async function OrderDetails({ params, searchParams }: Props) {
   await connection();
   const { id } = await params;
+  const { placed } = await searchParams;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   if (!claimsData?.claims) redirect("/login");
 
-  // RLS: this only returns the order if it belongs to the logged-in user.
+  // RLS: only returns the order if it belongs to the logged-in user (or their restaurant).
   const { data } = await supabase
     .from("orders")
     .select(
@@ -64,11 +63,18 @@ async function OrderDetails({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="mt-3 space-y-4">
-      <ClearCart />
+      {placed === "1" && <ClearCart />}
       <h1 className="text-2xl font-bold text-neutral-900">Order #{order.id.slice(0, 8)}</h1>
-      <p className="rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-800">
-        {STATUS[order.status] ?? order.status}
+      <p
+        className={
+          order.status === "cancelled"
+            ? "rounded-lg bg-neutral-200 px-3 py-2 text-sm font-semibold text-neutral-800"
+            : "rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-800"
+        }
+      >
+        {STATUS_LABEL[order.status] ?? order.status}
       </p>
+      {order.status === "placed" && <CancelOrderButton orderId={order.id} />}
       <p className="text-sm text-neutral-600">From {order.restaurants?.name ?? "restaurant"}</p>
 
       <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">

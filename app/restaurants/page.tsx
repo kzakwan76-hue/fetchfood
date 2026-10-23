@@ -12,6 +12,7 @@ export default async function RestaurantsPage() {
         <Link href="/">← FetchFood</Link>
         <span className="flex gap-4">
           <Link href="/cart">Cart</Link>
+          <Link href="/orders">Orders</Link>
           <Link href="/account">Account</Link>
         </span>
       </div>
