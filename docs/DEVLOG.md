@@ -216,3 +216,68 @@ Route (app)                          Revalidate  Expire
 - The guard cannot catch a dish name the AI writes in plain prose; the M6b prompt makes it use [[n]] markers instead.
 - The rule-based matching is keyword-based: it won't understand "something comforting".
 - No allergy data exists. The assistant must never claim a dish is allergy-safe.
+
+## Milestone 6b: assistant brain (fake AI only)
+**Built:** lib\assistant\convert.ts, conversation.ts, prompt.ts, answer.ts; recommend.ts now accepts a budget override; scripts\test-assistant-ai.mjs; tsx added as a dev dependency.
+
+**Decisions**
+- answerQuestion decides in order: nothing to recommend -> rules (no AI cost); no AI -> rules; AI error/bad format/rejected by guard -> rules; otherwise guarded AI answer.
+- The AI is a function passed in (callModel), so tests use a fake and the real Anthropic call comes in M6c.
+- Only open restaurants' dishes within budget go to the AI (max 40). Database ids are never sent.
+- Browser input is untrusted, including "assistant" turns; angle brackets and [[ ]] are neutralised.
+
+**Results:** test-assistant: [all checks passed] | test-assistant-ai: [all check passed] | lint: [> fetchfood@0.1.0 lint ] | build: [> fetchfood@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 199ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ✓ agentFeedback
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.1s
+  Running TypeScript ...
+  Finished TypeScript in 3.4s ...
+  Collecting page data using 11 workers ...
+✓ Collecting page data using 11 workers in 3.3s
+  Generating static pages using 11 workers (0/19) ...
+  Generating static pages using 11 workers (4/19)
+  Generating static pages using 11 workers (9/19)
+  Generating static pages using 11 workers (14/19)
+✓ Generating static pages using 11 workers (19/19) in 1695ms
+  Finalizing page optimization ...
+✓ Finalizing page optimization in 57ms
+
+Route (app)                          Revalidate  Expire
+┌ ○ /
+├ ○ /_not-found
+├ ◐ /account
+├ ○ /cart
+├ ◐ /checkout
+├ ◐ /dashboard
+├ ◐ /dashboard/menu
+├ ○ /login
+├ ◐ /orders
+├   /orders/[id]
+│ └ ◐ /orders/[id]
+├ ○ /restaurants                             1m      1h
+├   /restaurants/[slug]
+│ ├ ◐ /restaurants/[slug]
+│ ├ ○ /restaurants/biryani-junction          1m      1h
+│ ├ ○ /restaurants/burger-lab                1m      1h
+│ └ ◐ [+2 more paths]
+└ ○ /signup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content] | 
+
+**Limitations**
+- Real AI call, rate limits and API route come in M6c; no UI yet.
+- The catalog only knows if a restaurant is open, not whether a single dish is sold out.
+- Candidate selection beyond 40 dishes is keyword-based.

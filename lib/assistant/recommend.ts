@@ -66,8 +66,13 @@ function matchesWordStart(haystack: string, term: string): boolean {
   return new RegExp(`\\b${term}`).test(haystack);
 }
 
-export function recommendByRules(question: string, items: AssistantItem[]): AssistantAnswer {
-  const budget = parseBudget(question);
+export function recommendByRules(
+  question: string,
+  items: AssistantItem[],
+  budgetOverride?: number | null,
+): AssistantAnswer {
+  // undefined = work the budget out from the text; a number or null = the caller already knows it.
+  const budget = budgetOverride !== undefined ? budgetOverride : parseBudget(question);
   const terms = extractTerms(question);
   const orderable = items.filter(
     (item) => item.canOrderNow && (budget === null || item.pricePkr <= budget),
