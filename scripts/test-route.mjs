@@ -3,7 +3,8 @@
    const BASE = process.env.ASSISTANT_TEST_URL ?? "http://localhost:3000";
    const URL_ = `${BASE}/api/assistant`;
    const aiConfigured = Boolean(
-     process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_MODEL,
+     (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_MODEL) ||
+       process.env.OLLAMA_MODEL,
    );
 
    async function post(raw) {
