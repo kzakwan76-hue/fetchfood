@@ -105,3 +105,37 @@ export async function getRestaurantWithMenu(slug: string): Promise<RestaurantWit
     .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
   return { ...toRestaurant(row), items };
 }
+
+
+   export async function getAllRestaurantsWithMenus(): Promise<RestaurantWithMenu[]> {
+     "use cache";
+     cacheLife("minutes");
+     cacheTag("catalog");
+
+     const { data, error } = await publicClient()
+       .from("restaurants")
+       .select(`${COLUMNS}, menu_items(id, name, description, price_pkr, category, tags)`)
+       .order("name");
+     if (error) throw new Error("Could not load menus");
+
+     const rows = (data ?? []) as unknown as (RestaurantRow & {
+       menu_items: MenuItemRow[];
+     })[];
+
+     return rows.map((row) => ({
+       ...toRestaurant(row),
+       items: row.menu_items
+         .map((m) => ({
+           id: m.id,
+           name: m.name,
+           description: m.description,
+           pricePkr: m.price_pkr,
+           category: m.category,
+           tags: m.tags,
+         }))
+         .sort(
+           (a, b) =>
+             a.category.localeCompare(b.category) || a.name.localeCompare(b.name),
+         ),
+     }));
+   }
