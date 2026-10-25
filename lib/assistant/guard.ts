@@ -127,3 +127,51 @@ export function applyGuard(
   if (picks.length === 0 && reply === null) return null;
   return { reply: reply ?? SAFE_REPLY, picks, notes };
 }
+
+
+const MAX_SASS_CHARS = 300;
+// Things the assistant must never claim: it has no allergy, ingredient or halal data.
+const CLAIMS = /\b(halal|haram|allerg\w*|gluten|nuts?|lactose|dairy|vegan|safe|hygien\w*)\b/i;
+
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * M6e: the dishes are already chosen by code. This checks only the AI's one sentence.
+ * [[n]] markers refer to `picks` (1-based, in order). Returns the safe text, or null to reject it.
+ */
+export function applyReplyGuard(
+  reply: string,
+  picks: AssistantItem[],
+  allItems: AssistantItem[],
+  budget: number | null,
+): string | null {
+  let text = renderText(reply, picks, budget, MAX_SASS_CHARS);
+  if (text === null) return null;
+
+  // Small models write the name AND the marker: "Chicken Biryani Chicken Biryani".
+  
+  for (const pick of picks) {
+    const full = escapeRegex(pick.name);
+    const base = escapeRegex(pick.name.replace(/\s*\(.*?\)\s*/g, " ").trim());
+    text = text.replace(new RegExp(`(${full}\\s+)+${full}`, "gi"), pick.name);
+    if (base !== full) {
+      // "Chicken Karahi (half) Chicken Karahi" or "Chicken Karahi Chicken Karahi (half)"
+      text = text.replace(new RegExp(`${full}\\s+${base}`, "gi"), pick.name);
+      text = text.replace(new RegExp(`${base}\\s+${full}`, "gi"), pick.name);
+    }
+  }
+
+  if (CLAIMS.test(text)) return null;
+
+  // A dish that is not one of the picks must not be named in plain prose.
+  const lower = text.toLowerCase();
+  const pickNames = picks.map((pick) => pick.name.toLowerCase());
+  for (const item of allItems) {
+    const name = item.name.toLowerCase();
+    if (pickNames.some((p) => p.includes(name))) continue;
+    if (new RegExp(`\\b${escapeRegex(name)}\\b`).test(lower)) return null;
+  }
+  return text;
+}
