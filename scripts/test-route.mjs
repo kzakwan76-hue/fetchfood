@@ -32,6 +32,8 @@
      assert.equal(typeof p.itemId, "string");
      assert.equal(typeof p.restaurantSlug, "string");
      assert.ok(Number.isInteger(p.pricePkr), "price must be a whole rupee integer");
+     assert.ok(Number.isInteger(p.deliveryFeePkr), "fee must be a whole rupee integer");
+     assert.ok(Number.isInteger(p.minOrderPkr), "minimum must be a whole rupee integer"); 
    }
    if (!aiConfigured) {
      assert.notEqual(ok.json.source, "ai", "no key set, so it must not claim AI");

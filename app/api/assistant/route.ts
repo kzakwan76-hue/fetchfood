@@ -31,12 +31,13 @@
      const turns = parseTurns(body);
      if (!turns) return reply({ error: "Invalid conversation" }, 400);
 
-     let items;
+     let restaurants;
      try {
-       items = toAssistantItems(await getAllRestaurantsWithMenus());
+       restaurants = await getAllRestaurantsWithMenus();
      } catch {
        return reply({ error: "Menu unavailable" }, 503);
      }
+     const items = toAssistantItems(restaurants);
 
      // No key/model configured -> null -> rules. Only count usage when AI is possible.
      let callModel = createModelCall();
@@ -65,5 +66,16 @@
        }),
      );
 
-     return reply(toPublicAnswer(outcome));
+     // The cart needs each restaurant's fee and minimum (display only; the
+     // database recalculates everything when the order is placed).
+     const answer = toPublicAnswer(outcome);
+     const byId = new Map(restaurants.map((r) => [r.id, r] as const));
+     const picks = answer.picks.flatMap((pick) => {
+       const r = byId.get(pick.restaurantId);
+       return r
+         ? [{ ...pick, deliveryFeePkr: r.deliveryFeePkr, minOrderPkr: r.minOrderPkr }]
+         : [];
+     });
+
+     return reply({ ...answer, picks });
    }

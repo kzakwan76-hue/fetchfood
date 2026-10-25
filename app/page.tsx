@@ -1,3 +1,4 @@
+ import Link from "next/link";
 const roadmap = [
   { n: 1, title: "Foundation, branding, Pakistan helpers", done: true },
   { n: 2, title: "Customer UI with sample restaurants & menus", done: false },
@@ -44,9 +45,12 @@ export default function HomePage() {
             will help you choose, using only real menus from restaurants that
             deliver to you.
           </p>
-          <p className="mt-3 inline-block rounded-md bg-brand-100 px-2 py-1 text-sm font-semibold text-brand-700">
-            Not built yet: arrives in Milestone 6
-          </p>
+              <Link
+                 href="/assistant"
+                 className="mt-3 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+               >
+                 Ask the assistant
+               </Link>
         </section>
 
         <section aria-labelledby="roadmap-heading" className="mt-10">
