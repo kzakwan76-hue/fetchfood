@@ -307,3 +307,22 @@ Route (app)                          Revalidate  Expire
 - The rules fallback text says "My clever brain is offline" even when the cause is the rate limit, which is slightly misleading.
 - Rate limiter is in memory: resets on restart, per server instance, and x-forwarded-for can be spoofed. It is a cost guard, not security.
 - Ollama only runs on this PC, so a deployed site needs a hosted model or rules mode.
+
+
+## Milestone 6e: code picks the dishes, AI writes one guarded sentence
+**Built:** applyReplyGuard in lib\assistant\guard.ts; SASS_SYSTEM_PROMPT and buildSassPrompt in lib\assistant\prompt.ts; answer.ts rewritten; scripts\test-assistant-ai.mjs rewritten.
+
+**Decisions**
+- recommendByRules chooses the dishes (open, in budget). The AI only sees those dishes (no ids, no prices) and writes one short sentence, so cards and reasons are true by construction.
+- The sentence guard rejects prices, big numbers, unknown [[n]] markers, allergy/halal/safety claims, and other dishes named in plain prose. Rejected or failed AI calls fall back to the rules text.
+- The guard collapses doubled names, including a full name plus a shortened copy ("Chicken Karahi (half) Chicken Karahi").
+
+**Results:** test-assistant-ai: [all checks passed] | test-assistant: [all checks passed] | tsc: [clean] | lint: [clean]
+- Live with Ollama (llama3.2), "something spicy" and "cheesy under 800": cards were always real, open, in-budget dishes with plain "Matches: ..." reasons; no doubled names in the final runs. The Beef Smash Burger claims (double patty, pickles) match its menu description.
+
+**Limitations**
+- The guard checks rules, not truth: the AI can still describe a dish with its own words ("fiery kick").
+- Sentence quality is generic and has little sarcasm with llama3.2; a bigger model or Anthropic is needed for personality.
+- Keyword rules still find nothing for "surprise me" or "something comforting".
+- test-route printed source=rules in two runs; cause not yet checked in the server log.
+- Old selectCandidates, buildUserPrompt and SYSTEM_PROMPT are unused and can be deleted in a cleanup.
