@@ -281,3 +281,29 @@ Route (app)                          Revalidate  Expire
 - Real AI call, rate limits and API route come in M6c; no UI yet.
 - The catalog only knows if a restaurant is open, not whether a single dish is sold out.
 - Candidate selection beyond 40 dishes is keyword-based.
+
+
+## Milestone 6c-6d: AI route, Ollama provider, rate limiter, chat UI, Moka
+**Built:** lib\assistant\ratelimit.ts, model.ts, ollama.ts; getAllRestaurantsWithMenus() in lib\catalog.ts; app\api\assistant\route.ts; app\assistant\page.tsx; components\assistant-chat.tsx; components\moka-mascot.tsx; scripts test-ratelimit, test-model, test-route, ask.mjs; "Ask the assistant" link on the home page; prompt cleanup.
+
+**Decisions**
+- One query loads every restaurant with its nested menu (no N+1), cached with the "catalog" tag.
+- The model call is injected, so tests use fakes and the app needs no key. Provider order: Anthropic (if key and model are set), else local Ollama (if OLLAMA_MODEL is set), else rules.
+- Rate limit: in-memory sliding window per IP plus a global daily counter. Over the limit, the route answers with rules instead of an error. It only counts when a model exists.
+- The route enriches each pick with delivery fee and minimum order (display only, needed by addItem) and drops picks whose restaurant is missing.
+- Moka: an original inline-SVG duckling. While the assistant is thinking it runs a 9s loop: eats the burger, puts on shades, sips a drink, repeats. Reduced-motion users get a static duck.
+- The gorilla drafts were rejected and deleted.
+
+**Results:**
+- test-model: [model: all checks passed] | tsc: [clean] | lint: [clean]
+- test-route against the dev server with Ollama: [source=ai picks=1, route: all checks passed]
+- Rate limiter live trip (limit set to 2 per hour, three ask.mjs calls, "something spicy"): [call 1 source=ai, call 2 source=ai, call 3 source=rules with a normal 200 answer]
+- Browser: [add to cart, Moka empty screen, shades and drink loop, View cart link: seen working in screenshots; Moka loading size reduced after review]
+
+**Limitations**
+- Answer quality with llama3.2 is weak. Cards are always real, open, in-budget dishes with correct prices (the guard enforces that), but reasons are sometimes wrong or irrelevant, dish names are sometimes doubled in the prose, and there is no real sarcasm.
+- The guard cannot check that a reason is true.
+- Not tested: real Anthropic, a sold-out dish through the nested menu query, the cart-switch confirm dialog and phone width (I have only reported "went great" overall).
+- The rules fallback text says "My clever brain is offline" even when the cause is the rate limit, which is slightly misleading.
+- Rate limiter is in memory: resets on restart, per server instance, and x-forwarded-for can be spoofed. It is a cost guard, not security.
+- Ollama only runs on this PC, so a deployed site needs a hosted model or rules mode.
