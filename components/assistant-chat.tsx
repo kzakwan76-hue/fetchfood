@@ -242,7 +242,7 @@
 
                {loading && (
                  <div role="status" className="flex items-center gap-3">
-                   <MokaMascot variant="full" eating size={104} />
+                   <MokaMascot variant="full" eating size={80} />
                    <p className="text-sm text-charcoal-700">{PHRASES[phrase]}</p>
                  </div>
                )}
