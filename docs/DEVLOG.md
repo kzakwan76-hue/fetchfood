@@ -344,3 +344,22 @@ Route (app)                          Revalidate  Expire
 **Limitations**
 - test-admin proves refusal only (anonymous and non-admin callers); the success paths were checked by hand in the browser, not by an automated test.
 - Not built: changing a restaurant's owner, editing or hiding a restaurant, deleting one.
+
+
+## Milestone 7b: riders claim and deliver orders
+**Built:** supabase\migrations\0006_riders.sql (orders.rider_id, is_rider(), rider_available_orders, rider_my_orders, rider_claim_order, rider_release_order, rider_mark_delivered; update_order_status replaced); app\rider (page, actions); components\rider-button.tsx; components\order-actions.tsx (rider-aware); app\dashboard\page.tsx (reads rider_id); scripts\test-rider.mjs.
+
+**Decisions**
+- Riders pick up orders themselves from an "available" list. Every rider action is a database function that checks the rider role itself; riders have no direct table access.
+- Before a claim, a rider sees only restaurant, area and cash to collect. The customer's address and phone appear only after the claim.
+- Claiming locks the order row, so two riders cannot take the same order. A rider can hold at most 3 active deliveries and can release an order back to the pool.
+- If no rider is assigned, the owner can still do "out for delivery" and "delivered" (own drivers). Once a rider has the order, update_order_status refuses those owner steps.
+
+**Results:** test-rider, test-orders, test-dashboard, tsc, lint: [all passed and clean, as reported by me] | committed and pushed
+- Browser, as customer/owner, rider and a non-rider: [checked the full flow (prepare, rider takes it, owner locked out, release, take again, delivered, non-rider gets "not found"); all went as expected, as reported by me]
+
+**Limitations**
+- test-rider proves refusal only; success paths were checked by hand.
+- A claimed order whose rider disappears is stuck: only that rider can release it. An admin release is not built yet.
+- No delivery zones: riders see every restaurant's ready orders.
+- No links to /rider or /admin from the account page; no live updates (manual Refresh).
