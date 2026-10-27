@@ -11,6 +11,7 @@ import { RestaurantOpenToggle } from "../../components/restaurant-open-toggle";
 
 type OrderRow = {
   id: string;
+  rider_id: string | null;
   status: string;
   total_pkr: number;
   delivery_address: string;
@@ -61,7 +62,7 @@ async function DashboardContent() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, status, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, quantity)",
+      "id, rider_id, status, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, quantity)",
     )
     .in("restaurant_id", restaurants.map((r) => r.id))
     .order("created_at", { ascending: false })
@@ -115,7 +116,7 @@ async function DashboardContent() {
                 </p>
                 {o.note && <p className="text-sm text-neutral-700">Note: {o.note}</p>}
                 <p className="mt-1 text-sm font-semibold text-neutral-900">Cash to collect: {formatPKR(o.total_pkr)}</p>
-                <OrderActions orderId={o.id} status={o.status} />
+                <OrderActions orderId={o.id} status={o.status} hasRider={o.rider_id !== null} />
               </li>
             ))}
           </ul>

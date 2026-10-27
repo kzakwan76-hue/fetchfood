@@ -13,18 +13,37 @@ const NEXT: Record<string, { status: string; label: string }[]> = {
     { status: "preparing", label: "Start preparing" },
     { status: "cancelled", label: "Cancel" },
   ],
-  preparing: [{ status: "out_for_delivery", label: "Out for delivery" }],
+  preparing: [{ status: "out_for_delivery", label: "Deliver it ourselves" }],
   out_for_delivery: [{ status: "delivered", label: "Mark delivered" }],
 };
 
-export function OrderActions({ orderId, status }: { orderId: string; status: string }) {
+export function OrderActions({
+  orderId,
+  status,
+  hasRider = false,
+}: {
+  orderId: string;
+  status: string;
+  hasRider?: boolean;
+}) {
   const [state, formAction, pending] = useActionState(changeOrderStatus, {});
-  const options = NEXT[status] ?? [];
+  // Once a rider has taken the order, only the rider can move it on.
+  const lockedToRider = hasRider && (status === "preparing" || status === "out_for_delivery");
+  const options = lockedToRider ? [] : (NEXT[status] ?? []);
+
+  if (lockedToRider) {
+    return <p className="mt-3 text-sm text-neutral-600">A rider has this order.</p>;
+  }
   if (options.length === 0) return null;
 
   return (
     <form action={formAction} className="mt-3 flex flex-wrap items-center gap-2">
       <input type="hidden" name="orderId" value={orderId} />
+      {status === "preparing" && (
+        <p className="w-full text-sm text-neutral-600">
+          Waiting for a rider to take it. Or deliver it yourselves.
+        </p>
+      )}
       {options.map((o) => (
         <button
           key={o.status}
