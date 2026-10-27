@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { createRestaurant, setRole } from "../app/admin/actions";
+import { createRestaurant, releaseOrder, setRole } from "../app/admin/actions";
 
 const input = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2";
 const button =
@@ -90,3 +90,26 @@ export function RestaurantForm() {
     </form>
   );
 }
+
+
+export function ReleaseButton({ orderId }: { orderId: string }) {
+     const [state, action, pending] = useActionState(releaseOrder, {});
+     return (
+       <form action={action} className="mt-2 space-y-2">
+         <input type="hidden" name="orderId" value={orderId} />
+         <Message {...state} />
+         <button
+           type="submit"
+           disabled={pending}
+           onClick={(e) => {
+             if (!window.confirm("Take this order away from the rider and put it back in the available list?")) {
+               e.preventDefault();
+             }
+           }}
+           className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-800 disabled:opacity-60"
+         >
+           {pending ? "Releasing…" : "Release from rider"}
+         </button>
+       </form>
+     );
+   }

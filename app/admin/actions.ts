@@ -22,6 +22,8 @@ const MESSAGES: Record<string, string> = {
   bad_area: "Area must be 1 to 60 characters.",
   bad_eta: "Delivery time must be 5 to 180 minutes.",
   bad_fee: "Delivery fee must be 0 to 2000 rupees.",
+  order_not_found: "Order not found.",
+  invalid_transition: "That order isn't held by a rider right now.",
 };
 
 function explain(message: string): string {
@@ -74,3 +76,21 @@ export async function createRestaurant(_prev: State, formData: FormData): Promis
   revalidatePath("/admin");
   return { ok: "Restaurant created. It starts closed; the owner opens it from their dashboard." };
 }
+
+
+  const UUID = /^[0-9a-f-]{36}$/i;
+
+   export async function releaseOrder(_prev: State, formData: FormData): Promise<State> {
+     const orderId = text(formData, "orderId");
+     if (!UUID.test(orderId)) return { error: "Invalid request." };
+
+     const supabase = await createClient();
+     const { error } = await supabase.rpc("admin_release_order", { p_order_id: orderId });
+     if (error) return { error: explain(error.message) };
+
+     revalidatePath("/admin");
+     revalidatePath("/rider");
+     revalidatePath("/dashboard");
+     revalidatePath(`/orders/${orderId}`);
+     return { ok: "Order released. It is back in the riders' available list." };
+   }

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "../../lib/supabase/server";
-import { RestaurantForm, RoleForm } from "../../components/admin-forms";
+import { ReleaseButton, RestaurantForm, RoleForm } from "../../components/admin-forms";
 
 type UserRow = { u_id: string; u_email: string; u_name: string | null; u_role: string };
 type RestaurantRow = {
@@ -16,7 +16,16 @@ type RestaurantRow = {
   owner_id: string | null;
 };
 
-export default function AdminPage() {
+   type DeliveryRow = {
+     o_id: string;
+     o_restaurant: string;
+     o_rider_email: string | null;
+     o_rider_name: string | null;
+     o_total: number;
+     o_created: string;
+   };
+
+   export default function AdminPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <Link href="/account" className="text-sm font-semibold text-brand-600">
@@ -52,9 +61,33 @@ async function AdminContent() {
     .order("name");
   const restaurants = (restaurantData ?? []) as RestaurantRow[];
   const emailById = new Map(users.map((u) => [u.u_id, u.u_email]));
+  const { data: deliveryData } = await supabase.rpc("admin_active_deliveries");
+  const deliveries = (deliveryData ?? []) as DeliveryRow[];
 
   return (
-    <div className="mt-4 space-y-8">
+       <div className="mt-4 space-y-8">
+         <section>
+           <h2 className="text-lg font-semibold text-neutral-900">
+             Out for delivery with a rider ({deliveries.length})
+           </h2>
+           {deliveries.length === 0 ? (
+             <p className="mt-2 text-sm text-neutral-600">No rider is carrying an order right now.</p>
+           ) : (
+             <ul className="mt-2 space-y-3">
+               {deliveries.map((d) => (
+                 <li key={d.o_id} className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm">
+                   <p className="font-semibold text-neutral-900">
+                     #{d.o_id.slice(0, 8)} · {d.o_restaurant}
+                   </p>
+                   <p className="text-neutral-700">
+                     Rider: {d.o_rider_name ?? "no name"} ({d.o_rider_email ?? "unknown"})
+                   </p>
+                   <ReleaseButton orderId={d.o_id} />
+                 </li>
+               ))}
+             </ul>
+           )}
+         </section>
       <section className="rounded-2xl border border-neutral-200 bg-white p-4">
         <h2 className="text-lg font-semibold text-neutral-900">Set a role</h2>
         <p className="mb-3 text-sm text-neutral-600">

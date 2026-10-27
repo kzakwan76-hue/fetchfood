@@ -60,4 +60,15 @@ assert.ok(direct.error, "direct insert must be refused");
 const { data } = await anon.from("restaurants").select("slug").eq("slug", "tamper-test");
 assert.equal(data?.length ?? 0, 0);
 
+// 5. The release functions refuse non-admins too.
+for (const [fn, args] of [
+  ["admin_active_deliveries", {}],
+  ["admin_release_order", { p_order_id: "00000000-0000-0000-0000-000000000000" }],
+]) {
+  const a = await anon.rpc(fn, args);
+  assert.ok(a.error, `anon must be refused: ${fn}`);
+  const u = await user.rpc(fn, args);
+  assert.match(u.error?.message ?? "", /not_admin/, `expected not_admin from ${fn}`);
+}
+
 console.log("admin: all checks passed");
