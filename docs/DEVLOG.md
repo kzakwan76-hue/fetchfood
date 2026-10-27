@@ -326,3 +326,21 @@ Route (app)                          Revalidate  Expire
 - Keyword rules still find nothing for "surprise me" or "something comforting".
 - test-route printed source=rules in two runs; cause not yet checked in the server log.
 - Old selectCandidates, buildUserPrompt and SYSTEM_PROMPT are unused and can be deleted in a cleanup.
+
+
+## Milestone 7a: admin page, roles, restaurant creation
+**Built:** supabase\migrations\0005_admin.sql (admin_list_users, admin_set_role, admin_create_restaurant, "admin reads all restaurants" policy); app\admin (page, actions); components\admin-forms.tsx; scripts\test-admin.mjs.
+
+**Decisions**
+- Every admin write goes through a database function that checks is_admin() itself. The /admin page hides itself for non-admins, but that is only a UI hint.
+- The app can only set roles customer, restaurant_owner or rider. Admins are made by hand in SQL and cannot be changed from the app.
+- A role cannot be removed from someone who still owns a restaurant.
+- New restaurants start closed with the platform minimum of Rs. 150; creating one promotes a customer owner to restaurant_owner. The owner must sign up first.
+- No delete yet (cascade rules come in M8).
+
+**Results:** test-admin: [admin: all checks passed] | tsc: [clean] | lint: [clean] | commit d2a9237 pushed
+- Browser checklist 1-6: [all passed. Admin sees forms and lists, the TEST account gets "not found", role changes update the list, changing an admin account is refused, a created restaurant starts closed and promotes its owner, a duplicate slug is refused, and the new owner sees the restaurant on /dashboard.]
+
+**Limitations**
+- test-admin proves refusal only (anonymous and non-admin callers); the success paths were checked by hand in the browser, not by an automated test.
+- Not built: changing a restaurant's owner, editing or hiding a restaurant, deleting one.
