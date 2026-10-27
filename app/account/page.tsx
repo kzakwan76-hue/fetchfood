@@ -47,8 +47,10 @@ async function AccountDetails() {
       <div className="flex flex-wrap gap-4 text-sm font-semibold text-brand-600">
         <Link href="/orders">My orders</Link>
         {(profile?.role === "restaurant_owner" || profile?.role === "admin") && (
-          <Link href="/dashboard">Restaurant dashboard</Link>
+        <Link href="/dashboard">Restaurant dashboard</Link>
         )}
+        {profile?.role === "rider" && <Link href="/rider">Rider deliveries</Link>}
+        {profile?.role === "admin" && <Link href="/admin">Admin</Link>}
       </div>
       {!profile && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
