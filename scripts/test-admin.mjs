@@ -71,4 +71,19 @@ for (const [fn, args] of [
   assert.match(u.error?.message ?? "", /not_admin/, `expected not_admin from ${fn}`);
 }
 
+// 6. Zone functions and direct zone writes are refused for non-admins.
+const NIL = "00000000-0000-0000-0000-000000000000";
+for (const [fn, args] of [
+  ["admin_create_zone", { p_name: "Tamper Zone" }],
+  ["admin_set_restaurant_zone", { p_restaurant_id: NIL, p_zone_id: NIL }],
+  ["admin_set_rider_zone", { p_email: "nobody@example.com", p_zone_id: NIL }],
+]) {
+  const a = await anon.rpc(fn, args);
+  assert.ok(a.error, `anon must be refused: ${fn}`);
+  const u = await user.rpc(fn, args);
+  assert.match(u.error?.message ?? "", /not_admin/, `expected not_admin from ${fn}`);
+}
+const zoneWrite = await user.from("zones").insert({ slug: "tamper", name: "Tamper" });
+assert.ok(zoneWrite.error, "direct zone insert must be refused");
+
 console.log("admin: all checks passed");

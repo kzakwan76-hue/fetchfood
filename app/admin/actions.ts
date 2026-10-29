@@ -24,6 +24,11 @@ const MESSAGES: Record<string, string> = {
   bad_fee: "Delivery fee must be 0 to 2000 rupees.",
   order_not_found: "Order not found.",
   invalid_transition: "That order isn't held by a rider right now.",
+  bad_zone: "Zone name must use letters or numbers (English letters), up to 60 characters.",
+  zone_taken: "That zone already exists.",
+  zone_not_found: "That zone doesn't exist.",
+  restaurant_not_found: "Restaurant not found.",
+  not_a_rider: "That account is not a rider. Set its role to rider first.",
 };
 
 function explain(message: string): string {
@@ -93,4 +98,49 @@ export async function createRestaurant(_prev: State, formData: FormData): Promis
      revalidatePath("/dashboard");
      revalidatePath(`/orders/${orderId}`);
      return { ok: "Order released. It is back in the riders' available list." };
+   }
+   
+   export async function createZone(_prev: State, formData: FormData): Promise<State> {
+     const name = text(formData, "name");
+     if (name.length < 1 || name.length > 60) return { error: "Zone name must be 1 to 60 characters." };
+
+     const supabase = await createClient();
+     const { error } = await supabase.rpc("admin_create_zone", { p_name: name });
+     if (error) return { error: explain(error.message) };
+
+     revalidatePath("/admin");
+     return { ok: "Zone created." };
+   }
+
+   export async function setRestaurantZone(_prev: State, formData: FormData): Promise<State> {
+     const restaurantId = text(formData, "restaurantId");
+     const zoneId = text(formData, "zoneId");
+     if (!UUID.test(restaurantId) || !UUID.test(zoneId)) return { error: "Invalid request." };
+
+     const supabase = await createClient();
+     const { error } = await supabase.rpc("admin_set_restaurant_zone", {
+       p_restaurant_id: restaurantId,
+       p_zone_id: zoneId,
+     });
+     if (error) return { error: explain(error.message) };
+
+     updateTag("catalog");
+     revalidatePath("/admin");
+     revalidatePath("/rider");
+     return { ok: "Zone saved." };
+   }
+
+   export async function setRiderZone(_prev: State, formData: FormData): Promise<State> {
+     const email = text(formData, "email");
+     const zoneId = text(formData, "zoneId");
+     if (validateEmail(email)) return { error: "Enter a valid email." };
+     if (!UUID.test(zoneId)) return { error: "Invalid request." };
+
+     const supabase = await createClient();
+     const { error } = await supabase.rpc("admin_set_rider_zone", { p_email: email, p_zone_id: zoneId });
+     if (error) return { error: explain(error.message) };
+
+     revalidatePath("/admin");
+     revalidatePath("/rider");
+     return { ok: "Rider zone saved." };
    }

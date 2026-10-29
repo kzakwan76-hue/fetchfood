@@ -1,7 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { createRestaurant, releaseOrder, setRole } from "../app/admin/actions";
+   import {
+     createRestaurant,
+     createZone,
+     releaseOrder,
+     setRestaurantZone,
+     setRiderZone,
+     setRole,
+   } from "../app/admin/actions";
 
 const input = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2";
 const button =
@@ -113,3 +120,84 @@ export function ReleaseButton({ orderId }: { orderId: string }) {
        </form>
      );
    }
+
+
+   export type ZoneOption = { id: string; name: string };
+
+   export function ZoneForm() {
+     const [state, action, pending] = useActionState(createZone, {});
+     return (
+       <form action={action} className="space-y-3">
+         <label className="block text-sm font-medium">
+           New zone name (e.g. Model Town)
+           <input name="name" required maxLength={60} className={input} />
+         </label>
+         <Message {...state} />
+         <button type="submit" disabled={pending} className={button}>
+           {pending ? "Creating…" : "Create zone"}
+         </button>
+       </form>
+     );
+   }
+
+   export function RestaurantZoneForm({
+     restaurantId,
+     zones,
+     current,
+   }: {
+     restaurantId: string;
+     zones: ZoneOption[];
+     current: string | null;
+   }) {
+     const [state, action, pending] = useActionState(setRestaurantZone, {});
+     return (
+       <form action={action} className="mt-2 space-y-2">
+         <input type="hidden" name="restaurantId" value={restaurantId} />
+         <div className="flex gap-2">
+           <select name="zoneId" required defaultValue={current ?? ""} className={input}>
+             <option value="" disabled>
+               Choose a zone
+             </option>
+             {zones.map((z) => (
+               <option key={z.id} value={z.id}>
+                 {z.name}
+               </option>
+             ))}
+           </select>
+           <button type="submit" disabled={pending} className={button}>
+             {pending ? "…" : "Save"}
+           </button>
+         </div>
+         <Message {...state} />
+       </form>
+     );
+   }
+
+   export function RiderZoneForm({ zones }: { zones: ZoneOption[] }) {
+     const [state, action, pending] = useActionState(setRiderZone, {});
+     return (
+       <form action={action} className="space-y-3">
+         <label className="block text-sm font-medium">
+           Rider email
+           <input name="email" type="email" required className={input} />
+         </label>
+         <label className="block text-sm font-medium">
+           Zone
+           <select name="zoneId" required defaultValue="" className={input}>
+             <option value="" disabled>
+               Choose a zone
+             </option>
+             {zones.map((z) => (
+               <option key={z.id} value={z.id}>
+                 {z.name}
+               </option>
+             ))}
+           </select>
+         </label>
+         <Message {...state} />
+         <button type="submit" disabled={pending} className={button}>
+           {pending ? "Saving…" : "Set rider zone"}
+         </button>
+       </form>
+     );
+   }   

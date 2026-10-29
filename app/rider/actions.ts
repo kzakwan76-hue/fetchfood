@@ -17,6 +17,7 @@ const MESSAGES: Record<string, string> = {
   not_rider: "Only riders can do this.",
   order_not_found: "Order not found.",
   not_available: "Someone else already took this order.",
+  wrong_zone: "This order is outside your zone.",                      
   too_many: "You already have 3 active deliveries. Finish one first.",
   invalid_transition: "That change isn't allowed right now.",
   not_authenticated: "Please log in again.",
