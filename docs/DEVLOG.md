@@ -363,3 +363,24 @@ Route (app)                          Revalidate  Expire
 - A claimed order whose rider disappears is stuck: only that rider can release it. An admin release is not built yet.
 - No delivery zones: riders see every restaurant's ready orders.
 - No links to /rider or /admin from the account page; no live updates (manual Refresh).
+
+
+## Milestone 7c-7d: admin release, account links, delivery zones
+**Built:** 0007_admin_release.sql (admin_active_deliveries, admin_release_order); 0008_zones.sql (zones table, restaurants.zone_id, profiles.zone_id, admin_create_zone, admin_set_restaurant_zone, admin_set_rider_zone, zone-limited rider_available_orders and rider_claim_order); 0009_zone_orders.sql (place_order takes the customer's zone and refuses other zones); admin page with zones, rider zones, restaurant zones and release button; lib\zone-store.ts, components\zone-picker.tsx, components\restaurant-list.tsx; zone-aware lib\catalog.ts (getZones, zoneId), /restaurants, /assistant, route and checkout; role-based links on /account.
+
+**Decisions**
+- Zones are Lahore neighbourhoods managed only by the admin through checked database functions. Existing restaurants were moved into Gulberg.
+- A rider has one zone and sees and claims only orders from restaurants in it; no zone means no orders.
+- The customer's area is saved in the browser (like the cart). Changing area clears the cart.
+- place_order is the guarantee: it refuses any restaurant outside the zone the customer sent, so a tampered cart cannot cross zones. The restaurant list and Moka filtering are convenience.
+- Dev scripts may call the assistant route without a zone (all areas); the website always sends one.
+
+**Results:** M7c-1 and M7d-1 (tests, tsc, lint, browser checklists): [all passed, as reported by me]
+- M7d-2: [Everything worked out perfect]
+
+**Limitations**
+- A new restaurant has no zone until the admin sets one; zone-less restaurants cannot be ordered or delivered.
+- /restaurants/[slug] still opens for any area; the block happens at checkout.
+- Zones cannot be renamed, deactivated or deleted. A rider with no zone sees an empty list without an explanation.
+- Zone choice flashes on first load for returning customers (a design-pass fix).
+- The assistant route accepts requests with no zone; tighten once the dev scripts send one.
