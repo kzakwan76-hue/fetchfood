@@ -93,3 +93,23 @@ form:has(#craving:focus) {
   .skeleton, .rise { animation: none; }
   form:has(#craving:focus) { animation: none; }
 }
+
+
+/* Side menu */
+.slide-in {
+  animation: slide-in 0.25s ease-out both;
+}
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+.fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-in, .fade-in { animation: none; }
+}

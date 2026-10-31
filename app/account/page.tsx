@@ -1,19 +1,40 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { Skeleton } from "../../components/skeleton";
 import { createClient } from "../../lib/supabase/server";
 import { signOut } from "../auth/actions";
-import { connection } from "next/server";
+
+type Tile = { href: string; label: string; hint: string; emoji: string };
+
+// Links are UI hints only. Each page and each database function checks the role again.
+function tilesFor(role: string | null | undefined): Tile[] {
+  const tiles: Tile[] = [
+    { href: "/orders", label: "My orders", hint: "Track and review", emoji: "📦" },
+    { href: "/feedback", label: "Send feedback", hint: "Ideas and problems", emoji: "💬" },
+  ];
+  if (role === "restaurant_owner" || role === "admin") {
+    tiles.push({ href: "/dashboard", label: "Restaurant dashboard", hint: "Incoming orders", emoji: "🧑‍🍳" });
+    tiles.push({ href: "/dashboard/menu", label: "Menu and photos", hint: "Dishes, prices, pictures", emoji: "📸" });
+  }
+  if (role === "rider") tiles.push({ href: "/rider", label: "Rider deliveries", hint: "Pick up and deliver", emoji: "🛵" });
+  if (role === "admin") {
+    tiles.push({ href: "/admin", label: "Admin", hint: "Zones, roles, restaurants", emoji: "🛠️" });
+    tiles.push({ href: "/admin/feedback", label: "Feedback inbox", hint: "What customers say", emoji: "📥" });
+  }
+  return tiles;
+}
 
 export default function AccountPage() {
   return (
-    <main className="mx-auto max-w-md px-4 py-6">
-      <Link href="/restaurants" className="text-sm font-semibold text-brand-600">
+    <main className="mx-auto max-w-md px-4 py-4">
+      <Link href="/restaurants" className="text-sm font-semibold text-brand-700">
         ← Restaurants
       </Link>
-      <h1 className="mt-3 text-2xl font-bold text-neutral-900">Your account</h1>
+      <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-charcoal-900">Your account</h1>
       {/* The part that reads cookies must sit inside Suspense (cacheComponents). */}
-      <Suspense fallback={<p className="mt-6 text-neutral-600">Loading…</p>}>
+      <Suspense fallback={<Skeleton className="mt-6 h-64 w-full" />}>
         <AccountDetails />
       </Suspense>
     </main>
@@ -37,24 +58,31 @@ async function AccountDetails() {
     .single();
 
   return (
-    <div className="mt-6 space-y-4">
-      <dl className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+    <div className="mt-5 space-y-5">
+      <dl className="divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
         <Row label="Name" value={profile?.full_name} />
         <Row label="Phone" value={profile?.phone} />
         <Row label="Email" value={claims.email} />
         <Row label="Role" value={profile?.role} />
       </dl>
-      {/* Links are UI hints only. Each page and each database function checks the role again. */}
-      <div className="flex flex-wrap gap-4 text-sm font-semibold text-brand-600">
-        <Link href="/orders">My orders</Link>
-        <Link href="/feedback">Send feedback</Link>
-        {(profile?.role === "restaurant_owner" || profile?.role === "admin") && (
-          <Link href="/dashboard">Restaurant dashboard</Link>
-        )}
-        {profile?.role === "rider" && <Link href="/rider">Rider deliveries</Link>}
-        {profile?.role === "admin" && <Link href="/admin">Admin</Link>}
-        {profile?.role === "admin" && <Link href="/admin/feedback">Feedback inbox</Link>}
-      </div>
+
+      <ul className="grid grid-cols-2 gap-3">
+        {tilesFor(profile?.role).map((t) => (
+          <li key={t.href}>
+            <Link
+              href={t.href}
+              className="block h-full rounded-3xl border border-brand-200 bg-white p-4 shadow-card motion-safe:transition hover:shadow-lift"
+            >
+              <span aria-hidden="true" className="text-2xl">
+                {t.emoji}
+              </span>
+              <p className="mt-1 font-bold text-charcoal-900">{t.label}</p>
+              <p className="text-xs text-charcoal-700">{t.hint}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
       {!profile && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
           Profile row not found. The sign-up trigger from M3a may not have run.
@@ -63,7 +91,7 @@ async function AccountDetails() {
       <form action={signOut}>
         <button
           type="submit"
-          className="rounded-lg border border-neutral-300 bg-white px-4 py-2 font-semibold text-neutral-800 hover:border-brand-500"
+          className="rounded-xl border border-brand-200 bg-white px-4 py-2.5 font-semibold text-charcoal-900 hover:bg-brand-100"
         >
           Log out
         </button>
@@ -75,8 +103,8 @@ async function AccountDetails() {
 function Row({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex justify-between gap-3 p-4">
-      <dt className="text-sm text-neutral-600">{label}</dt>
-      <dd className="font-medium text-neutral-900">{value ?? "—"}</dd>
+      <dt className="text-sm text-charcoal-700">{label}</dt>
+      <dd className="font-medium text-charcoal-900">{value ?? "—"}</dd>
     </div>
   );
 }

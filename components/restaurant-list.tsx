@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { Restaurant } from "../lib/catalog";
 import { formatPKR } from "../lib/pk";
 import { useHydrated, useZone } from "../lib/zone-store";
@@ -8,6 +9,8 @@ import { RatingBadge } from "./rating-badge";
 import { RestaurantBanner } from "./restaurant-banner";
 import { ListSkeleton } from "./skeleton";
 import { ZonePicker, type ZoneOption } from "./zone-picker";
+
+const chip = "whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-semibold";
 
 export function RestaurantList({
   restaurants,
@@ -18,8 +21,29 @@ export function RestaurantList({
 }) {
   const hydrated = useHydrated();
   const chosen = useZone();
+  const [query, setQuery] = useState("");
+  const [cuisineChoice, setCuisineChoice] = useState<string | null>(null);
+  const [openOnly, setOpenOnly] = useState(false);
+
   const zone = zones.find((z) => z.id === chosen?.id) ?? null;
-  const visible = zone ? restaurants.filter((r) => r.zoneId === zone.id) : [];
+  const inZone = zone ? restaurants.filter((r) => r.zoneId === zone.id) : [];
+  const cuisines = [...new Set(inZone.map((r) => r.cuisine))].sort();
+  const cuisine = cuisineChoice && cuisines.includes(cuisineChoice) ? cuisineChoice : null;
+  const q = query.trim().toLowerCase();
+  const visible = inZone
+    .filter(
+      (r) =>
+        (!cuisine || r.cuisine === cuisine) &&
+        (!openOnly || r.isOpen) &&
+        (!q || `${r.name} ${r.cuisine} ${r.area}`.toLowerCase().includes(q)),
+    )
+    .sort((a, b) => Number(b.isOpen) - Number(a.isOpen)); // open kitchens first
+
+  function clearFilters() {
+    setQuery("");
+    setCuisineChoice(null);
+    setOpenOnly(false);
+  }
 
   return (
     <>
@@ -35,9 +59,68 @@ export function RestaurantList({
         </p>
       )}
 
-      {hydrated && zone && visible.length === 0 && (
+      {hydrated && zone && inZone.length === 0 && (
         <p className="mt-6 rounded-2xl bg-white px-4 py-3 text-sm text-charcoal-700 shadow-card">
           We don&apos;t have restaurants in {zone.name} yet. Try another area.
+        </p>
+      )}
+
+      {hydrated && zone && inZone.length > 0 && (
+        <div className="mt-5 space-y-3">
+          <label className="block">
+            <span className="sr-only">Search restaurants</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search restaurants or cuisines"
+              className="w-full rounded-2xl border border-brand-200 bg-white px-4 py-2.5 shadow-sm"
+            />
+          </label>
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+            <button
+              type="button"
+              aria-pressed={openOnly}
+              onClick={() => setOpenOnly((v) => !v)}
+              className={`${chip} ${
+                openOnly ? "border-green-600 bg-green-100 text-green-900" : "border-brand-200 bg-white text-charcoal-800"
+              }`}
+            >
+              Open now
+            </button>
+            <button
+              type="button"
+              aria-pressed={cuisine === null}
+              onClick={() => setCuisineChoice(null)}
+              className={`${chip} ${
+                cuisine === null ? "border-brand-600 bg-brand-600 text-white" : "border-brand-200 bg-white text-charcoal-800"
+              }`}
+            >
+              All
+            </button>
+            {cuisines.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={cuisine === c}
+                onClick={() => setCuisineChoice(c)}
+                className={`${chip} ${
+                  cuisine === c ? "border-brand-600 bg-brand-600 text-white" : "border-brand-200 bg-white text-charcoal-800"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hydrated && zone && inZone.length > 0 && visible.length === 0 && (
+        <p className="mt-6 rounded-2xl bg-white px-4 py-3 text-sm text-charcoal-700 shadow-card">
+          No restaurants match.{" "}
+          <button type="button" onClick={clearFilters} className="font-semibold text-brand-700 underline">
+            Clear filters
+          </button>
         </p>
       )}
 

@@ -24,6 +24,7 @@ export type MenuItem = {
   pricePkr: number;
   category: string;
   tags: string[];
+  imageUrl: string | null;
 };
 export type RestaurantWithMenu = Restaurant & { items: MenuItem[] };
 export type Zone = { id: string; name: string };
@@ -49,12 +50,13 @@ type MenuItemRow = {
   price_pkr: number;
   category: string;
   tags: string[];
+  image_path: string | null;
 };
 type Ratings = Map<string, { avg: number; count: number }>;
 
 const COLUMNS =
   "id, slug, name, cuisine, area, eta_minutes, delivery_fee_pkr, min_order_pkr, is_open, zone_id, image_path";
-const MENU_COLUMNS = "menu_items(id, name, description, price_pkr, category, tags)";
+const MENU_COLUMNS = "menu_items(id, name, description, price_pkr, category, tags, image_path)";
 
 // Public catalog data needs no login, so this client has no cookies.
 // That makes it safe to use inside "use cache".
@@ -104,6 +106,7 @@ function toItems(rows: MenuItemRow[]): MenuItem[] {
       pricePkr: m.price_pkr,
       category: m.category,
       tags: m.tags,
+      imageUrl: photoUrl(m.image_path),
     }))
     .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }

@@ -13,19 +13,9 @@ export default async function HomePage() {
   const zones = await getZones().catch(() => []);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6">
-      <header className="flex items-center justify-between">
-        <span className="text-2xl font-extrabold tracking-tight text-brand-600">
-          Fetch<span className="text-charcoal-900">Food</span>
-        </span>
-        <nav className="flex gap-4 text-sm font-semibold text-brand-700">
-          <Link href="/restaurants">Restaurants</Link>
-          <Link href="/account">Account</Link>
-        </nav>
-      </header>
-
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-6">
       <main className="flex-1">
-        <section className="grid items-center gap-6 py-10 sm:grid-cols-[1fr_auto]">
+        <section className="grid items-center gap-6 py-8 sm:grid-cols-[1fr_auto]">
           <div className="rise">
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
               Hungry, but your area is <span className="text-brand-600">“not serviceable”</span>?

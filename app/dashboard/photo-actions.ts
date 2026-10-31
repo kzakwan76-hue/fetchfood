@@ -13,7 +13,8 @@ const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png",
 const MESSAGES: Record<string, string> = {
   not_authenticated: "Please log in again.",
   restaurant_not_found: "Restaurant not found.",
-  not_allowed: "Only the restaurant's owner can change its photo.",
+  item_not_found: "Dish not found.",
+  not_allowed: "Only the restaurant's owner can change its photos.",
   bad_path: "That file name isn't allowed.",
 };
 
@@ -26,6 +27,18 @@ function looksLike(type: string, b: Uint8Array): boolean {
   return false;
 }
 
+type Checked = { error: string } | { bytes: Uint8Array; type: string; ext: string };
+
+async function readImage(file: FormDataEntryValue | null): Promise<Checked> {
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a photo first." };
+  if (file.size > MAX_BYTES) return { error: "That photo is over 2 MB. Please choose a smaller one." };
+  const ext = TYPES[file.type];
+  if (!ext) return { error: "Use a JPEG, PNG or WebP photo." };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!looksLike(file.type, bytes)) return { error: "That file doesn't look like a real photo." };
+  return { bytes, type: file.type, ext };
+}
+
 function refresh() {
   updateTag("catalog");
   revalidatePath("/dashboard/menu");
@@ -33,19 +46,14 @@ function refresh() {
 
 export async function uploadPhoto(_prev: State, formData: FormData): Promise<State> {
   const restaurantId = String(formData.get("restaurantId") ?? "");
-  const file = formData.get("photo");
   if (!UUID.test(restaurantId)) return { error: "Invalid request." };
-  if (!(file instanceof File) || file.size === 0) return { error: "Choose a photo first." };
-  if (file.size > MAX_BYTES) return { error: "That photo is over 2 MB. Please choose a smaller one." };
-  const ext = TYPES[file.type];
-  if (!ext) return { error: "Use a JPEG, PNG or WebP photo." };
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!looksLike(file.type, bytes)) return { error: "That file doesn't look like a real photo." };
+  const img = await readImage(formData.get("photo"));
+  if ("error" in img) return { error: img.error };
 
   const supabase = await createClient();
-  const path = `${restaurantId}/${Date.now()}.${ext}`;
-  const upload = await supabase.storage.from(PHOTO_BUCKET).upload(path, bytes, {
-    contentType: file.type,
+  const path = `${restaurantId}/${Date.now()}.${img.ext}`;
+  const upload = await supabase.storage.from(PHOTO_BUCKET).upload(path, img.bytes, {
+    contentType: img.type,
     upsert: false,
   });
   if (upload.error) return { error: "Could not upload. Are you the owner of this restaurant?" };
@@ -75,6 +83,52 @@ export async function removePhoto(_prev: State, formData: FormData): Promise<Sta
     p_restaurant_id: restaurantId,
     p_path: null,
   });
+  if (error) return { error: MESSAGES[error.message] ?? "Could not remove the photo." };
+  if (typeof oldPath === "string" && oldPath) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([oldPath]);
+  }
+
+  refresh();
+  return { ok: true };
+}
+
+export async function uploadDishPhoto(_prev: State, formData: FormData): Promise<State> {
+  const itemId = String(formData.get("itemId") ?? "");
+  if (!UUID.test(itemId)) return { error: "Invalid request." };
+  const img = await readImage(formData.get("photo"));
+  if ("error" in img) return { error: img.error };
+
+  const supabase = await createClient();
+  const { data: item } = await supabase.from("menu_items").select("restaurant_id").eq("id", itemId).maybeSingle();
+  const restaurantId = (item as { restaurant_id: string } | null)?.restaurant_id;
+  if (!restaurantId) return { error: MESSAGES.item_not_found };
+
+  const path = `${restaurantId}/dishes/${itemId}-${Date.now()}.${img.ext}`;
+  const upload = await supabase.storage.from(PHOTO_BUCKET).upload(path, img.bytes, {
+    contentType: img.type,
+    upsert: false,
+  });
+  if (upload.error) return { error: "Could not upload. Are you the owner of this restaurant?" };
+
+  const { data: oldPath, error } = await supabase.rpc("set_dish_photo", { p_item_id: itemId, p_path: path });
+  if (error) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+    return { error: MESSAGES[error.message] ?? "Could not save the photo." };
+  }
+  if (typeof oldPath === "string" && oldPath) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([oldPath]);
+  }
+
+  refresh();
+  return { ok: true };
+}
+
+export async function removeDishPhoto(_prev: State, formData: FormData): Promise<State> {
+  const itemId = String(formData.get("itemId") ?? "");
+  if (!UUID.test(itemId)) return { error: "Invalid request." };
+
+  const supabase = await createClient();
+  const { data: oldPath, error } = await supabase.rpc("set_dish_photo", { p_item_id: itemId, p_path: null });
   if (error) return { error: MESSAGES[error.message] ?? "Could not remove the photo." };
   if (typeof oldPath === "string" && oldPath) {
     await supabase.storage.from(PHOTO_BUCKET).remove([oldPath]);

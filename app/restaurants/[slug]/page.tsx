@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -17,7 +18,7 @@ export async function generateStaticParams() {
 // The frame (back link, cart bar) is static. Only the menu waits for data.
 export default function RestaurantPage({ params }: { params: Promise<{ slug: string }> }) {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6 pb-28">
+    <main className="mx-auto max-w-2xl px-4 py-4 pb-28">
       <Link href="/restaurants" className="text-sm font-semibold text-brand-700">
         ← All restaurants
       </Link>
@@ -63,7 +64,12 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
   return (
     <>
       <div className="mt-4 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
-        <RestaurantBanner cuisine={restaurant.cuisine} imageUrl={restaurant.imageUrl} size="hero" dimmed={!restaurant.isOpen} />
+        <RestaurantBanner
+          cuisine={restaurant.cuisine}
+          imageUrl={restaurant.imageUrl}
+          size="hero"
+          dimmed={!restaurant.isOpen}
+        />
         <div className="p-4">
           <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{restaurant.name}</h1>
           <p className="mt-0.5 text-sm text-charcoal-700">
@@ -90,7 +96,7 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
       {categories.length > 1 && (
         <nav
           aria-label="Menu categories"
-          className="no-scrollbar sticky top-0 z-10 -mx-4 mt-4 overflow-x-auto bg-brand-50/90 px-4 py-2 backdrop-blur"
+          className="no-scrollbar sticky top-14 z-10 -mx-4 mt-4 overflow-x-auto bg-brand-50/90 px-4 py-2 backdrop-blur"
         >
           <ul className="flex gap-2">
             {categories.map((category, index) => (
@@ -108,7 +114,7 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
       )}
 
       {categories.map((category, index) => (
-        <section key={category} id={`cat-${index}`} className="mt-6 scroll-mt-16">
+        <section key={category} id={`cat-${index}`} className="mt-6 scroll-mt-28">
           <h2 className="text-lg font-bold text-charcoal-900">{category}</h2>
           <ul className="mt-2 divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
             {restaurant.items
@@ -122,7 +128,12 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
                     )}
                     <p className="mt-1.5 text-sm font-bold text-brand-700">{formatPKR(item.pricePkr)}</p>
                   </div>
-                  <div className="shrink-0 pt-0.5">
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    {item.imageUrl && (
+                      <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-brand-100">
+                        <Image src={item.imageUrl} alt="" fill sizes="80px" className="object-cover" />
+                      </div>
+                    )}
                     <AddToCart
                       restaurant={forCart}
                       item={{ id: item.id, name: item.name, pricePkr: item.pricePkr }}
