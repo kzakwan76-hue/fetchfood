@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { placeOrder } from "../app/checkout/actions";
 import { subtotalPkr, totalPkr } from "../lib/cart";
 import { useCart } from "../lib/cart-store";
@@ -11,10 +11,19 @@ import { useZone } from "../lib/zone-store";
 const inputClass =
   "mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 focus:border-brand-500 focus:outline-none";
 
-export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
+type SavedAddress = { id: string; label: string; address: string };
+
+export function CheckoutForm({
+  defaultPhone,
+  addresses,
+}: {
+  defaultPhone: string;
+  addresses: SavedAddress[];
+}) {
   const cart = useCart();
   const zone = useZone();
   const [state, formAction, pending] = useActionState(placeOrder, {});
+  const [address, setAddress] = useState("");
 
   if (cart.lines.length === 0) {
     return (
@@ -38,6 +47,9 @@ export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
     );
   }
 
+  const known = addresses.some((a) => a.address.trim().toLowerCase() === address.trim().toLowerCase());
+  const canSave = !known && addresses.length < 5 && address.trim().length >= 10;
+
   // IDs and quantities only. No prices are sent to the server.
   const payload = JSON.stringify({
     restaurantId: cart.restaurantId,
@@ -59,6 +71,24 @@ export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
         </Link>
       </p>
 
+      {addresses.length > 0 && (
+        <div>
+          <p className="text-sm font-medium text-neutral-800">Your saved addresses</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {addresses.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setAddress(a.address)}
+                className="rounded-full border border-brand-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-charcoal-900 hover:bg-brand-100"
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <label className="block text-sm font-medium text-neutral-800">
         Delivery address
         <textarea
@@ -66,11 +96,29 @@ export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
           rows={3}
           required
           minLength={10}
-          defaultValue={state.values?.address ?? ""}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
           placeholder="House / street / area / landmark"
           className={inputClass}
         />
       </label>
+
+      {canSave && (
+        <div className="rounded-xl bg-brand-50 p-3 text-sm">
+          <label className="flex items-center gap-2 font-medium text-neutral-800">
+            <input type="checkbox" name="saveAddress" />
+            Save this address for next time
+          </label>
+          <input
+            name="saveLabel"
+            maxLength={30}
+            placeholder="Label, e.g. Home or Work"
+            aria-label="Label for the saved address"
+            className={inputClass}
+          />
+        </div>
+      )}
+
       <label className="block text-sm font-medium text-neutral-800">
         Mobile number
         <input

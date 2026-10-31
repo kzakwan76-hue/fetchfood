@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { signOut } from "../app/auth/actions";
 
 type Entry = { href: string; label: string; emoji: string };
@@ -14,6 +15,8 @@ const BROWSE: Entry[] = [
 ];
 const ACCOUNT: Entry[] = [
   { href: "/orders", label: "My orders", emoji: "📦" },
+  { href: "/favourites", label: "Favourites", emoji: "❤️" },
+  { href: "/addresses", label: "Saved addresses", emoji: "🏡" },
   { href: "/feedback", label: "Send feedback", emoji: "💬" },
   { href: "/account", label: "Account", emoji: "👤" },
 ];
@@ -96,6 +99,73 @@ export function SideMenu({
   const close = () => setOpen(false);
   const work = workLinks(role);
 
+  // The header has a backdrop blur, which turns it into the reference frame for "fixed" children.
+  // Rendering the menu straight into <body> (a portal) makes it cover the real screen.
+  const panel = (
+    <>
+      <div aria-hidden="true" onClick={close} className="fade-in fixed inset-0 z-40 bg-charcoal-900/50" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        className="slide-in fixed right-0 top-0 z-50 flex h-dvh w-80 max-w-[85vw] flex-col overflow-y-auto bg-white p-4 shadow-lift"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xl font-extrabold tracking-tight text-brand-600">
+              Fetch<span className="text-charcoal-900">Food</span>
+            </p>
+            <p className="truncate text-sm text-charcoal-700">
+              {signedIn ? `Hi, ${name ?? "there"}` : "Welcome! Log in to order."}
+            </p>
+          </div>
+          <button
+            ref={closeRef}
+            type="button"
+            aria-label="Close menu"
+            onClick={close}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand-200 text-lg hover:bg-brand-100"
+          >
+            <span aria-hidden="true">✕</span>
+          </button>
+        </div>
+
+        <Section entries={BROWSE} onNavigate={close} />
+        {signedIn ? (
+          <>
+            <Section title="Your account" entries={ACCOUNT} onNavigate={close} />
+            <Section title="Work" entries={work} onNavigate={close} />
+            <form action={signOut} className="mt-6 border-t border-brand-100 pt-4">
+              <button
+                type="submit"
+                className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 font-semibold text-charcoal-900 hover:bg-brand-100"
+              >
+                Log out
+              </button>
+            </form>
+          </>
+        ) : (
+          <div className="mt-6 space-y-2 border-t border-brand-100 pt-4">
+            <Link
+              href="/login"
+              onClick={close}
+              className="block rounded-xl bg-brand-600 px-4 py-2.5 text-center font-bold text-white hover:bg-brand-700"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              onClick={close}
+              className="block rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-center font-bold text-charcoal-900 hover:bg-brand-100"
+            >
+              Create account
+            </Link>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <>
       <button
@@ -107,71 +177,7 @@ export function SideMenu({
       >
         <span aria-hidden="true">☰</span>
       </button>
-
-      {open && (
-        <>
-          <div aria-hidden="true" onClick={close} className="fade-in fixed inset-0 z-40 bg-charcoal-900/50" />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu"
-            className="slide-in fixed right-0 top-0 z-50 flex h-dvh w-80 max-w-[85vw] flex-col overflow-y-auto bg-white p-4 shadow-lift"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xl font-extrabold tracking-tight text-brand-600">
-                  Fetch<span className="text-charcoal-900">Food</span>
-                </p>
-                <p className="truncate text-sm text-charcoal-700">
-                  {signedIn ? `Hi, ${name ?? "there"}` : "Welcome! Log in to order."}
-                </p>
-              </div>
-              <button
-                ref={closeRef}
-                type="button"
-                aria-label="Close menu"
-                onClick={close}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand-200 text-lg hover:bg-brand-100"
-              >
-                <span aria-hidden="true">✕</span>
-              </button>
-            </div>
-
-            <Section entries={BROWSE} onNavigate={close} />
-            {signedIn ? (
-              <>
-                <Section title="Your account" entries={ACCOUNT} onNavigate={close} />
-                <Section title="Work" entries={work} onNavigate={close} />
-                <form action={signOut} className="mt-6 border-t border-brand-100 pt-4">
-                  <button
-                    type="submit"
-                    className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 font-semibold text-charcoal-900 hover:bg-brand-100"
-                  >
-                    Log out
-                  </button>
-                </form>
-              </>
-            ) : (
-              <div className="mt-6 space-y-2 border-t border-brand-100 pt-4">
-                <Link
-                  href="/login"
-                  onClick={close}
-                  className="block rounded-xl bg-brand-600 px-4 py-2.5 text-center font-bold text-white hover:bg-brand-700"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={close}
-                  className="block rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-center font-bold text-charcoal-900 hover:bg-brand-100"
-                >
-                  Create account
-                </Link>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+      {open && createPortal(panel, document.body)}
     </>
   );
 }

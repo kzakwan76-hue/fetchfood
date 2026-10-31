@@ -9,6 +9,7 @@ import { CancelOrderButton } from "../../../components/cancel-order-button";
 import { ClearCart } from "../../../components/clear-cart";
 import { OrderTimeline } from "../../../components/order-timeline";
 import { RefreshButton } from "../../../components/refresh-button";
+import { ReorderButton } from "../../../components/reorder-button";
 import { ReviewForm } from "../../../components/review-form";
 import { Skeleton } from "../../../components/skeleton";
 
@@ -114,6 +115,7 @@ async function OrderDetails({ params, searchParams }: Props) {
         </div>
       )}
       {order.status === "placed" && <CancelOrderButton orderId={order.id} />}
+      {isCustomer && (order.status === "delivered" || order.status === "cancelled") && <ReorderButton orderId={order.id} />}
 
       {isCustomer && order.status === "delivered" &&
         (review ? (

@@ -9,6 +9,7 @@ import { RestaurantBanner } from "../../../components/restaurant-banner";
 import { Skeleton } from "../../../components/skeleton";
 import { getRecentReviews, getRestaurants, getRestaurantWithMenu } from "../../../lib/catalog";
 import { formatPKR } from "../../../lib/pk";
+import { FavoriteSlot } from "../../../components/favorite-slot";
 
 export async function generateStaticParams() {
   const restaurants = await getRestaurants();
@@ -71,7 +72,12 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
           dimmed={!restaurant.isOpen}
         />
         <div className="p-4">
-          <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{restaurant.name}</h1>
+        <div className="flex items-start justify-between gap-3">
+             <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{restaurant.name}</h1>
+             <Suspense fallback={<span aria-hidden="true" className="h-10 w-10 shrink-0" />}>
+               <FavoriteSlot restaurantId={restaurant.id} />
+             </Suspense>
+           </div>
           <p className="mt-0.5 text-sm text-charcoal-700">
             {restaurant.cuisine} · {restaurant.area}
           </p>

@@ -33,6 +33,16 @@ async function CheckoutGate() {
     .select("phone")
     .eq("id", data.claims.sub)
     .single();
+  const { data: saved } = await supabase
+    .from("saved_addresses")
+    .select("id, label, address")
+    .order("created_at", { ascending: false })
+    .limit(5);
 
-  return <CheckoutForm defaultPhone={profile?.phone ?? ""} />;
+  return (
+    <CheckoutForm
+      defaultPhone={profile?.phone ?? ""}
+      addresses={(saved ?? []) as { id: string; label: string; address: string }[]}
+    />
+  );
 }

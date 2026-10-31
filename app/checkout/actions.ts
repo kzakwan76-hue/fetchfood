@@ -70,5 +70,12 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     if (error.message === "not_authenticated") redirect("/login");
     return fail(MESSAGES[error.message] ?? "Could not place your order. Please try again.");
   }
-  redirect(`/orders/${data}?placed=1`);
+       // Saving the address is a convenience: if it fails, the order is still placed.
+     if (text(formData, "saveAddress") === "on") {
+       await supabase.rpc("save_address", {
+         p_label: text(formData, "saveLabel").slice(0, 30) || "Saved",
+         p_address: values.address,
+       });
+     }
+     redirect(`/orders/${data}?placed=1`);
 }
