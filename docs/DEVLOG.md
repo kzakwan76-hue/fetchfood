@@ -505,3 +505,18 @@ Route (app)                          Revalidate  Expire
 - Deleting a dish leaves its photo file behind (no cleanup yet).
 - The side menu costs one login check and one profile read per page view.
 - Search covers restaurant name, cuisine and area, not dish names. No saved addresses, order again, vouchers, favourites or live tracking yet.
+
+
+## Milestone 12: sidebar fix, saved addresses, order again, favourites
+**Built:** 0014_addresses_favorites.sql (saved_addresses, save_address, favorites, toggle_favorite); app\customer\actions.ts (deleteAddress, toggleFavorite, loadReorder); components reorder-button, favorite-button, favorite-slot; pages /favourites and /addresses; saved-address chips and save option in the checkout form; portal in components\side-menu.tsx; scripts\test-customer.mjs.
+
+**Decisions**
+- The side menu bug: a fixed-position child of an element with backdrop-filter is positioned against that element, not the screen. The fix is a React portal into document.body.
+- Addresses and favourites are written only through functions (limits of 5 and 50); users can read and delete only their own rows via RLS.
+- Order again rebuilds the cart from today's menu, so prices are current and removed dishes are skipped with a warning. The database still recalculates the total at checkout.
+
+**Results:** test-customer, test-orders, tsc, lint, build: [write what you saw] | browser checklist 1-6: [write what you saw]
+
+**Limitations**
+- No address edit (delete and re-save), no map or location picker, no favourites filter on the restaurant list.
+- Search still covers restaurant name, cuisine and area, not dishes.
