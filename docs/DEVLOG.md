@@ -456,3 +456,20 @@ Route (app)                          Revalidate  Expire
 - Account, dashboard, admin and checkout pages still show plain "Loading…" text and the old styling.
 - No dark mode, no Urdu/RTL check yet, no automated UI tests.
 
+
+## Milestone 9: Moka unlock, ratings and reviews, feedback, composer glow
+**Built:** 0010_reviews_feedback.sql (reviews, feedback, submit_review, my_order_review, restaurant_rating_stats, my_delivered_order_count, submit_feedback, admin_list_feedback); ratings in lib\catalog.ts (getRecentReviews); components rating-badge, review-form, feedback-form; app\orders\review-actions.ts; review card on /orders/[id]; ratings on restaurant cards and pages; /feedback and /admin/feedback; unlock check in app\api\assistant\route.ts; focus glow in app\globals.css; scripts\test-reviews.mjs.
+
+**Decisions**
+- Moka's AI sentence unlocks after the customer's first delivered order (ASSISTANT_UNLOCK_ORDERS, 0 disables). Everyone keeps the free rules-based Moka. Locked and logged-out requests never reach the AI or the rate limiter.
+- One review per delivered order, written through submit_review only. An owner cannot review their own restaurant. Public readers see rating, comment and date, never who or which order (column-level grants).
+- Feedback goes through submit_feedback (max 5 a day) and is read only by admins.
+- The composer's rectangle was the global focus outline; the whole pill now glows instead.
+
+**Results:** test-reviews, test-orders, test-dashboard, tsc, lint, build, test-route: [everything went perfect] | browser checklist 1-9: [Perfection]
+
+**Limitations**
+- A restaurant owner can mark their own orders delivered, so a second account could farm an unlock or reviews. Fine for launch scale; revisit with rider-only delivery.
+- test-reviews proves refusal only; success paths were checked by hand.
+- No review editing or deletion, no owner replies, no moderation tools, and owners do not see their reviews on the dashboard yet.
+- Locked Moka text is set by the route, not by the chat screen, so the chat has no dedicated "locked" badge yet.
