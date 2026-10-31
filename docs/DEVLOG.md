@@ -473,3 +473,19 @@ Route (app)                          Revalidate  Expire
 - test-reviews proves refusal only; success paths were checked by hand.
 - No review editing or deletion, no owner replies, no moderation tools, and owners do not see their reviews on the dashboard yet.
 - Locked Moka text is set by the route, not by the chat screen, so the chat has no dedicated "locked" badge yet.
+
+
+## Milestone 10: restaurant photos
+**Built:** 0011_photos.sql (restaurants.image_path, public bucket restaurant-photos with 2 MB and JPEG/PNG/WebP limits, storage policies for owners and admins, set_restaurant_photo); lib\photo.ts; photo-aware components\restaurant-banner.tsx and lib\catalog.ts (imageUrl); app\dashboard\photo-actions.ts; components\restaurant-photo-card.tsx; photo card on /dashboard/menu; next.config.ts (image host, 3 MB server-action limit); scripts\test-photos.mjs.
+
+**Decisions**
+- The database stores a file path; the public URL is built in code. A new file name per upload means no stale cache.
+- Storage policies and set_restaurant_photo both check ownership; the dashboard is only a hint. The server also checks the file's first bytes, size and type, and the bucket enforces size and type again.
+- Old photos are deleted when replaced or removed. Without a photo the emoji banner is shown.
+
+**Results:** test-photos, test-orders, test-dashboard, tsc, lint, build: [write what you saw] | browser checklist 1-8: [write what you saw]
+
+**Limitations**
+- No image resizing or cropping: owners should upload a wide photo. Next.js optimises delivery.
+- Only owners have an upload screen; admins can write through the rules but have no screen yet.
+- No dish photos, no moderation of uploaded images, and the photo shows after the catalog cache refreshes (a few minutes).
