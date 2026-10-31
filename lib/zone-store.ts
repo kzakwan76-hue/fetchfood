@@ -63,3 +63,10 @@ function subscribe(callback: () => void) {
 export function useZone(): ChosenZone | null {
   return useSyncExternalStore(subscribe, getZone, () => null);
 }
+
+const noSubscription = () => () => {};
+
+/** false while rendering on the server and during the first client render, then true. Stops the "pick an area" flash. */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(noSubscription, () => true, () => false);
+}

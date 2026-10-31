@@ -4,13 +4,18 @@
   --color-brand-50: #fff7ed;
   --color-brand-100: #ffedd5;
   --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
   --color-brand-400: #fb923c;
   --color-brand-500: #f97316;
   --color-brand-600: #ea580c;
   --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
   --color-charcoal-700: #3a3a3f;
   --color-charcoal-800: #27272b;
   --color-charcoal-900: #18181b;
+
+  --shadow-card: 0 1px 2px rgb(24 24 27 / 0.04), 0 8px 24px -12px rgb(194 65 12 / 0.25);
+  --shadow-lift: 0 2px 4px rgb(24 24 27 / 0.06), 0 16px 32px -12px rgb(194 65 12 / 0.35);
 
   /* System fonts only: no font downloads, friendly to slow connections.
      The Naskh/Nastaliq fallbacks keep Urdu text readable. */
@@ -20,6 +25,7 @@
 
 html {
   color-scheme: light;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -36,4 +42,36 @@ body {
 :focus-visible {
   outline: 3px solid var(--color-brand-600);
   outline-offset: 2px;
+}
+
+/* Loading placeholder shape (see components/skeleton.tsx). */
+.skeleton {
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, #f6e6d4 25%, #fdf1e4 50%, #f6e6d4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.rise {
+  animation: rise 0.45s ease-out both;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .skeleton, .rise { animation: none; }
 }

@@ -7,6 +7,7 @@ import { formatPKR } from "../../lib/pk";
 import { formatOrderTime } from "../../lib/order-status";
 import { RefreshButton } from "../../components/refresh-button";
 import { RiderButton } from "../../components/rider-button";
+import { ListSkeleton } from "../../components/skeleton";
 
 type Available = {
   o_id: string;
@@ -26,11 +27,11 @@ type Mine = Available & {
 export default function RiderPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/account" className="text-sm font-semibold text-brand-600">
+      <Link href="/account" className="text-sm font-semibold text-brand-700">
         ← Account
       </Link>
       <h1 className="mt-3 text-2xl font-bold text-neutral-900">Rider deliveries</h1>
-      <Suspense fallback={<p className="mt-6 text-neutral-600">Loading…</p>}>
+      <Suspense fallback={<ListSkeleton rows={3} height="h-32" />}>
         <RiderContent />
       </Suspense>
     </main>
@@ -46,11 +47,27 @@ async function RiderContent() {
   // UI hint only: every rider function checks the role again in the database.
   const { data: me } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, zone_id")
     .eq("id", claimsData.claims.sub)
     .single();
   if (me?.role !== "rider") notFound();
 
+  if (!me.zone_id) {
+    return (
+      <div className="mt-6 rounded-3xl border border-brand-200 bg-white p-6 shadow-card">
+        <p className="font-bold text-charcoal-900">You don&apos;t have a delivery zone yet</p>
+        <p className="mt-1 text-sm text-charcoal-700">
+          Riders only see orders from restaurants in their own zone. Ask an admin to assign you one, then
+          refresh this page.
+        </p>
+        <div className="mt-3">
+          <RefreshButton />
+        </div>
+      </div>
+    );
+  }
+
+  const { data: zone } = await supabase.from("zones").select("name").eq("id", me.zone_id).maybeSingle();
   const { data: availableData } = await supabase.rpc("rider_available_orders");
   const { data: mineData } = await supabase.rpc("rider_my_orders");
   const available = (availableData ?? []) as Available[];
@@ -60,6 +77,10 @@ async function RiderContent() {
 
   return (
     <div className="mt-4 space-y-8">
+      <p className="text-sm text-neutral-700">
+        Your zone: <strong>{zone?.name ?? "unknown"}</strong>
+      </p>
+
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-neutral-900">My active deliveries ({active.length})</h2>
@@ -77,7 +98,7 @@ async function RiderContent() {
                 {o.o_items && <p className="mt-1 text-neutral-800">{o.o_items}</p>}
                 <p className="mt-2 text-neutral-700">{o.o_address}</p>
                 <p className="text-neutral-700">
-                  <a href={`tel:${o.o_phone}`} className="font-semibold text-brand-600">
+                  <a href={`tel:${o.o_phone}`} className="font-semibold text-brand-700">
                     {o.o_phone}
                   </a>
                 </p>
@@ -102,7 +123,7 @@ async function RiderContent() {
       <section>
         <h2 className="text-lg font-semibold text-neutral-900">Available to pick up ({available.length})</h2>
         {available.length === 0 ? (
-          <p className="mt-2 text-sm text-neutral-600">No orders are ready right now.</p>
+          <p className="mt-2 text-sm text-neutral-600">No orders are ready in your zone right now.</p>
         ) : (
           <ul className="mt-2 space-y-3">
             {available.map((o) => (

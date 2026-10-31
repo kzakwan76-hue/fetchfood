@@ -4,9 +4,12 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 import { formatPKR } from "../../../lib/pk";
-import { STATUS_LABEL } from "../../../lib/order-status";
+import { ACTIVE_STATUSES, STATUS_LABEL, STATUS_TONE } from "../../../lib/order-status";
 import { CancelOrderButton } from "../../../components/cancel-order-button";
 import { ClearCart } from "../../../components/clear-cart";
+import { OrderTimeline } from "../../../components/order-timeline";
+import { RefreshButton } from "../../../components/refresh-button";
+import { Skeleton } from "../../../components/skeleton";
 
 type OrderRow = {
   id: string;
@@ -29,11 +32,19 @@ type Props = {
 
 export default function OrderPage({ params, searchParams }: Props) {
   return (
-    <main className="mx-auto max-w-md px-4 py-6">
-      <Link href="/orders" className="text-sm font-semibold text-brand-600">
+    <main className="mx-auto max-w-md px-4 py-6 pb-24">
+      <Link href="/orders" className="text-sm font-semibold text-brand-700">
         ← My orders
       </Link>
-      <Suspense fallback={<p className="mt-6 text-neutral-600">Loading…</p>}>
+      <Suspense
+        fallback={
+          <div className="mt-4 space-y-4" role="status" aria-label="Loading order">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-56 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        }
+      >
         <OrderDetails params={params} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -62,51 +73,70 @@ async function OrderDetails({ params, searchParams }: Props) {
   if (!order) notFound();
 
   return (
-    <div className="mt-3 space-y-4">
+    <div className="mt-4 space-y-4">
       {placed === "1" && <ClearCart />}
-      <h1 className="text-2xl font-bold text-neutral-900">Order #{order.id.slice(0, 8)}</h1>
-      <p
-        className={
-          order.status === "cancelled"
-            ? "rounded-lg bg-neutral-200 px-3 py-2 text-sm font-semibold text-neutral-800"
-            : "rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-800"
-        }
-      >
-        {STATUS_LABEL[order.status] ?? order.status}
-      </p>
-      {order.status === "placed" && <CancelOrderButton orderId={order.id} />}
-      <p className="text-sm text-neutral-600">From {order.restaurants?.name ?? "restaurant"}</p>
 
-      <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">
+            Order #{order.id.slice(0, 8)}
+          </h1>
+          <p className="text-sm text-charcoal-700">From {order.restaurants?.name ?? "restaurant"}</p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${STATUS_TONE[order.status] ?? "bg-neutral-200 text-neutral-700"}`}
+        >
+          {STATUS_LABEL[order.status] ?? order.status}
+        </span>
+      </div>
+
+      {placed === "1" && (
+        <p className="rounded-2xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
+          Order placed! The restaurant has been told.
+        </p>
+      )}
+
+      <OrderTimeline status={order.status} />
+      {ACTIVE_STATUSES.includes(order.status) && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-charcoal-700">This page checks for updates every 30 seconds.</p>
+          <RefreshButton />
+        </div>
+      )}
+      {order.status === "placed" && <CancelOrderButton orderId={order.id} />}
+
+      <ul className="divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
         {order.order_items.map((item) => (
           <li key={item.item_name} className="flex justify-between gap-3 p-4">
             <span>
               {item.quantity} × {item.item_name}
             </span>
-            <span className="font-medium">{formatPKR(item.unit_price_pkr * item.quantity)}</span>
+            <span className="font-semibold">{formatPKR(item.unit_price_pkr * item.quantity)}</span>
           </li>
         ))}
       </ul>
 
-      <dl className="space-y-1 rounded-2xl border border-neutral-200 bg-white p-4 text-sm">
+      <dl className="space-y-1.5 rounded-3xl border border-brand-200 bg-white p-4 text-sm shadow-card">
         <div className="flex justify-between">
-          <dt className="text-neutral-600">Subtotal</dt>
+          <dt className="text-charcoal-700">Subtotal</dt>
           <dd>{formatPKR(order.subtotal_pkr)}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-neutral-600">Delivery fee</dt>
+          <dt className="text-charcoal-700">Delivery fee</dt>
           <dd>{formatPKR(order.delivery_fee_pkr)}</dd>
         </div>
-        <div className="flex justify-between text-base font-semibold text-neutral-900">
+        <div className="flex justify-between border-t border-brand-100 pt-2 text-base font-bold text-charcoal-900">
           <dt>Pay the rider (cash)</dt>
           <dd>{formatPKR(order.total_pkr)}</dd>
         </div>
       </dl>
 
-      <p className="text-sm text-neutral-700">
-        Delivering to: {order.delivery_address} · {order.phone}
-      </p>
-      {order.note && <p className="text-sm text-neutral-700">Note: {order.note}</p>}
+      <div className="rounded-3xl border border-brand-200 bg-white p-4 text-sm text-charcoal-800 shadow-card">
+        <p className="font-semibold text-charcoal-900">Delivering to</p>
+        <p className="mt-1">{order.delivery_address}</p>
+        <p className="text-charcoal-700">{order.phone}</p>
+        {order.note && <p className="mt-2 text-charcoal-700">Note: {order.note}</p>}
+      </div>
     </div>
   );
 }

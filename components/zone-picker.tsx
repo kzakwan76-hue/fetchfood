@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { EMPTY_CART } from "../lib/cart";
 import { getCart, setCart } from "../lib/cart-store";
-import { setZone, useZone } from "../lib/zone-store";
+import { setZone, useHydrated, useZone } from "../lib/zone-store";
 
 export type ZoneOption = { id: string; name: string };
 
 export function ZonePicker({ zones }: { zones: ZoneOption[] }) {
+  const hydrated = useHydrated();
   const chosen = useZone();
   const current = zones.find((z) => z.id === chosen?.id) ?? null;
   const [open, setOpen] = useState(false);
@@ -26,12 +27,16 @@ export function ZonePicker({ zones }: { zones: ZoneOption[] }) {
     setOpen(false);
   }
 
+  // Wait for the browser to read the saved area, so returning customers never see a flash of the picker.
+  if (!hydrated) return <div aria-hidden="true" className="skeleton mx-auto h-14 w-full max-w-sm" />;
+
   if (current && !open) {
     return (
-      <div className="flex items-center justify-center gap-2 text-sm">
-        <span className="text-neutral-700">Delivering to</span>
-        <strong className="text-neutral-900">{current.name}</strong>
-        <button type="button" onClick={() => setOpen(true)} className="font-semibold text-brand-600 underline">
+      <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+        <span aria-hidden="true">📍</span>
+        <span className="text-charcoal-700">Delivering to</span>
+        <strong className="text-charcoal-900">{current.name}</strong>
+        <button type="button" onClick={() => setOpen(true)} className="font-semibold text-brand-700 underline">
           Change
         </button>
       </div>
@@ -40,17 +45,17 @@ export function ZonePicker({ zones }: { zones: ZoneOption[] }) {
 
   return (
     <div className="text-center">
-      <p className="text-sm font-semibold text-neutral-800">Where should we deliver?</p>
+      <p className="text-sm font-semibold text-charcoal-800">Where should we deliver?</p>
       {zones.length === 0 ? (
-        <p className="mt-2 text-sm text-neutral-600">No delivery areas yet.</p>
+        <p className="mt-2 text-sm text-charcoal-700">No delivery areas yet.</p>
       ) : (
-        <div className="mt-2 flex flex-wrap justify-center gap-2">
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
           {zones.map((z) => (
             <button
               key={z.id}
               type="button"
               onClick={() => choose(z)}
-              className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 hover:border-brand-500"
+              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-charcoal-800 shadow-sm hover:border-brand-500 hover:bg-brand-100"
             >
               {z.name}
             </button>
@@ -58,7 +63,7 @@ export function ZonePicker({ zones }: { zones: ZoneOption[] }) {
         </div>
       )}
       {current && (
-        <button type="button" onClick={() => setOpen(false)} className="mt-2 text-sm text-neutral-600 underline">
+        <button type="button" onClick={() => setOpen(false)} className="mt-3 text-sm text-charcoal-700 underline">
           Cancel
         </button>
       )}
