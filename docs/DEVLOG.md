@@ -384,3 +384,75 @@ Route (app)                          Revalidate  Expire
 - Zones cannot be renamed, deactivated or deleted. A rider with no zone sees an empty list without an explanation.
 - Zone choice flashes on first load for returning customers (a design-pass fix).
 - The assistant route accepts requests with no zone; tighten once the dev scripts send one.
+
+
+## Milestone 8 (design pass): look and feel
+**Built:** design tokens, card shadows, shimmer skeleton and rise-in animation in app\globals.css; components skeleton, restaurant-banner, order-timeline, auth-shell, ask-moka-button; lib\cuisine.ts (placeholder emoji and gradient per cuisine); new landing page; restaurant cards and menu page (hero banner, sticky category bar); restyled cart, orders list, order page (progress timeline, 30s refresh), login and signup; rider no-zone explanation; MokaStyles and the floating "Ask Moka" button in the root layout; useHydrated in lib\zone-store.ts.
+
+**Decisions**
+- Restaurants use designed placeholder banners (cuisine emoji on a gradient) until real photo upload exists.
+- The area picker waits for the browser to read its saved area, which removes the first-load flash.
+- The stale roadmap and the "Milestone 1" badge were removed; the landing page states Moka's limits (no allergy or halal confirmation) honestly.
+- Staff pages (checkout, account, dashboard, admin) keep their old look for now.
+
+**Results:** tsc: [clean] | lint: [clean] | build: [> fetchfood@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 187ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  ✓ agentFeedback
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.8s
+  Running TypeScript ...
+  Finished TypeScript in 6.4s ...
+  Collecting page data using 11 workers ...
+✓ Collecting page data using 11 workers in 3.0s
+  Generating static pages using 11 workers (0/24) ...
+  Generating static pages using 11 workers (6/24)
+  Generating static pages using 11 workers (12/24)
+  Generating static pages using 11 workers (18/24)
+✓ Generating static pages using 11 workers (24/24) in 2.7s
+  Finalizing page optimization ...
+✓ Finalizing page optimization in 70ms
+
+Route (app)                          Revalidate  Expire
+┌ ○ /                                        1m      1h
+├ ○ /_not-found
+├ ◐ /account
+├ ◐ /admin
+├ ƒ /api/assistant
+├ ○ /assistant                               1m      1h
+├ ○ /cart
+├ ◐ /checkout
+├ ◐ /dashboard
+├ ◐ /dashboard/menu
+├ ○ /login
+├ ◐ /orders
+├   /orders/[id]
+│ └ ◐ /orders/[id]
+├ ○ /restaurants                             1m      1h
+├   /restaurants/[slug]
+│ ├ ◐ /restaurants/[slug]
+│ ├ ○ /restaurants/biryani-junction          1m      1h
+│ ├ ○ /restaurants/burger-lab                1m      1h
+│ └ ◐ [+3 more paths]
+├ ◐ /rider
+└ ○ /signup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+ƒ  (Dynamic)            server-rendered on demand] | test-orders: [all passed ] | phone-width checklist 1-11: [everything perfect]
+
+**Limitations**
+- No real photos yet (needs a database column, Supabase Storage and an owner upload screen).
+- Account, dashboard, admin and checkout pages still show plain "Loading…" text and the old styling.
+- No dark mode, no Urdu/RTL check yet, no automated UI tests.
+
