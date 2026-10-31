@@ -109,6 +109,7 @@ export async function createRestaurant(_prev: State, formData: FormData): Promis
      if (error) return { error: explain(error.message) };
 
      revalidatePath("/admin");
+     updateTag("catalog");
      return { ok: "Zone created." };
    }
 

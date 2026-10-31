@@ -7,9 +7,12 @@ import { MAX_QTY } from "../../lib/cart";
 
 type State = { error?: string; values?: { address: string; phone: string; note: string } };
 
+const UUID = /^[0-9a-f-]{36}$/i;
+
 const MESSAGES: Record<string, string> = {
   below_minimum: "Your cart is below this restaurant's minimum order.",
   restaurant_unavailable: "This restaurant is closed or unavailable right now.",
+  wrong_zone: "This restaurant doesn't deliver to your chosen area. Change your area or pick another restaurant.",
   invalid_items: "An item in your cart is no longer available. Please review your cart.",
   bad_items: "Your cart is empty.",
   address_too_short: "Please enter your full delivery address.",
@@ -50,6 +53,9 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
   if (values.address.length < 10) return fail(MESSAGES.address_too_short);
   if (!isValidPkPhone(values.phone)) return fail(MESSAGES.phone_invalid);
 
+  const zoneId = text(formData, "zoneId");
+  if (!UUID.test(zoneId)) return fail("Choose your delivery area on the restaurants page first.");
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("place_order", {
     p_restaurant_id: restaurantId,
@@ -57,6 +63,7 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     p_address: values.address,
     p_phone: normalizePkPhone(values.phone),
     p_note: values.note || null,
+    p_zone_id: zoneId,
   });
 
   if (error) {

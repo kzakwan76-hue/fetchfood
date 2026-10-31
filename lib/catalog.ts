@@ -11,6 +11,7 @@ export type Restaurant = {
   deliveryFeePkr: number;
   minOrderPkr: number;
   isOpen: boolean;
+  zoneId: string | null;
 };
 export type MenuItem = {
   id: string;
@@ -21,6 +22,7 @@ export type MenuItem = {
   tags: string[];
 };
 export type RestaurantWithMenu = Restaurant & { items: MenuItem[] };
+export type Zone = { id: string; name: string };
 
 type RestaurantRow = {
   id: string;
@@ -32,6 +34,7 @@ type RestaurantRow = {
   delivery_fee_pkr: number;
   min_order_pkr: number;
   is_open: boolean;
+  zone_id: string | null;
 };
 type MenuItemRow = {
   id: string;
@@ -43,7 +46,8 @@ type MenuItemRow = {
 };
 
 const COLUMNS =
-  "id, slug, name, cuisine, area, eta_minutes, delivery_fee_pkr, min_order_pkr, is_open";
+  "id, slug, name, cuisine, area, eta_minutes, delivery_fee_pkr, min_order_pkr, is_open, zone_id";
+const MENU_COLUMNS = "menu_items(id, name, description, price_pkr, category, tags)";
 
 // Public catalog data needs no login, so this client has no cookies.
 // That makes it safe to use inside "use cache".
@@ -66,7 +70,31 @@ function toRestaurant(r: RestaurantRow): Restaurant {
     deliveryFeePkr: r.delivery_fee_pkr,
     minOrderPkr: r.min_order_pkr,
     isOpen: r.is_open,
+    zoneId: r.zone_id,
   };
+}
+
+function toItems(rows: MenuItemRow[]): MenuItem[] {
+  return rows
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      description: m.description,
+      pricePkr: m.price_pkr,
+      category: m.category,
+      tags: m.tags,
+    }))
+    .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+}
+
+export async function getZones(): Promise<Zone[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("catalog");
+
+  const { data, error } = await publicClient().from("zones").select("id, name").order("name");
+  if (error) throw new Error("Could not load areas");
+  return (data ?? []) as Zone[];
 }
 
 export async function getRestaurants(): Promise<Restaurant[]> {
@@ -86,56 +114,27 @@ export async function getRestaurantWithMenu(slug: string): Promise<RestaurantWit
 
   const { data, error } = await publicClient()
     .from("restaurants")
-    .select(`${COLUMNS}, menu_items(id, name, description, price_pkr, category, tags)`)
+    .select(`${COLUMNS}, ${MENU_COLUMNS}`)
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw new Error("Could not load menu");
   if (!data) return null;
 
   const row = data as unknown as RestaurantRow & { menu_items: MenuItemRow[] };
-  const items: MenuItem[] = row.menu_items
-    .map((m) => ({
-      id: m.id,
-      name: m.name,
-      description: m.description,
-      pricePkr: m.price_pkr,
-      category: m.category,
-      tags: m.tags,
-    }))
-    .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
-  return { ...toRestaurant(row), items };
+  return { ...toRestaurant(row), items: toItems(row.menu_items) };
 }
 
+export async function getAllRestaurantsWithMenus(): Promise<RestaurantWithMenu[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("catalog");
 
-   export async function getAllRestaurantsWithMenus(): Promise<RestaurantWithMenu[]> {
-     "use cache";
-     cacheLife("minutes");
-     cacheTag("catalog");
+  const { data, error } = await publicClient()
+    .from("restaurants")
+    .select(`${COLUMNS}, ${MENU_COLUMNS}`)
+    .order("name");
+  if (error) throw new Error("Could not load menus");
 
-     const { data, error } = await publicClient()
-       .from("restaurants")
-       .select(`${COLUMNS}, menu_items(id, name, description, price_pkr, category, tags)`)
-       .order("name");
-     if (error) throw new Error("Could not load menus");
-
-     const rows = (data ?? []) as unknown as (RestaurantRow & {
-       menu_items: MenuItemRow[];
-     })[];
-
-     return rows.map((row) => ({
-       ...toRestaurant(row),
-       items: row.menu_items
-         .map((m) => ({
-           id: m.id,
-           name: m.name,
-           description: m.description,
-           pricePkr: m.price_pkr,
-           category: m.category,
-           tags: m.tags,
-         }))
-         .sort(
-           (a, b) =>
-             a.category.localeCompare(b.category) || a.name.localeCompare(b.name),
-         ),
-     }));
-   }
+  const rows = (data ?? []) as unknown as (RestaurantRow & { menu_items: MenuItemRow[] })[];
+  return rows.map((row) => ({ ...toRestaurant(row), items: toItems(row.menu_items) }));
+}

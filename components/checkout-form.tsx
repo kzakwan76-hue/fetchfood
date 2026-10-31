@@ -6,12 +6,14 @@ import { placeOrder } from "../app/checkout/actions";
 import { subtotalPkr, totalPkr } from "../lib/cart";
 import { useCart } from "../lib/cart-store";
 import { formatPKR } from "../lib/pk";
+import { useZone } from "../lib/zone-store";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 focus:border-brand-500 focus:outline-none";
 
 export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
   const cart = useCart();
+  const zone = useZone();
   const [state, formAction, pending] = useActionState(placeOrder, {});
 
   if (cart.lines.length === 0) {
@@ -20,6 +22,17 @@ export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
         Your cart is empty.{" "}
         <Link href="/restaurants" className="font-semibold text-brand-600">
           Browse restaurants
+        </Link>
+      </p>
+    );
+  }
+
+  if (!zone) {
+    return (
+      <p className="mt-6 text-neutral-700">
+        Choose your delivery area first.{" "}
+        <Link href="/restaurants" className="font-semibold text-brand-600">
+          Choose area
         </Link>
       </p>
     );
@@ -34,9 +47,16 @@ export function CheckoutForm({ defaultPhone }: { defaultPhone: string }) {
   return (
     <form action={formAction} className="mt-6 space-y-4">
       <input type="hidden" name="cart" value={payload} />
+      <input type="hidden" name="zoneId" value={zone.id} />
 
       <p className="text-sm text-neutral-600">
         {cart.restaurantName} · {formatPKR(subtotalPkr(cart))} + {formatPKR(cart.deliveryFeePkr)} delivery
+      </p>
+      <p className="text-sm text-neutral-700">
+        Delivering to: <strong>{zone.name}</strong>{" "}
+        <Link href="/restaurants" className="font-semibold text-brand-600 underline">
+          Change
+        </Link>
       </p>
 
       <label className="block text-sm font-medium text-neutral-800">

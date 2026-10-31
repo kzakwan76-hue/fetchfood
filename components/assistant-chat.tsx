@@ -6,6 +6,8 @@
    import { addItem, itemCount } from "../lib/cart";
    import { getCart, setCart, useCart } from "../lib/cart-store";
    import { MokaMascot, MokaStyles } from "./moka-mascot";
+   import { ZonePicker, type ZoneOption } from "./zone-picker";
+   import { useZone } from "../lib/zone-store";
 
    type Pick = {
      itemId: string;
@@ -72,8 +74,10 @@
      return { reply: d.reply, picks };
    }
 
-   export function AssistantChat() {
+   export function AssistantChat({ zones }: { zones: ZoneOption[] }) {
      const cart = useCart();
+     const chosen = useZone();
+     const zone = zones.find((z) => z.id === chosen?.id) ?? null;
      const [messages, setMessages] = useState<ChatMessage[]>([]);
      const [input, setInput] = useState("");
      const [loading, setLoading] = useState(false);
@@ -95,7 +99,7 @@
 
      async function send(raw: string) {
        const text = raw.replace(/\s+/g, " ").trim().slice(0, MAX_INPUT);
-       if (!text || loading) return;
+       if (!text || loading || !zone) return;
 
        const next: ChatMessage[] = [...messages, { role: "user", text }];
        setMessages(next);
@@ -110,6 +114,7 @@
            headers: { "Content-Type": "application/json" },
            body: JSON.stringify({
              messages: next.slice(-8).map((m) => ({ role: m.role, text: m.text })),
+             zoneId: zone.id,
            }),
            signal: AbortSignal.timeout(90_000),
          });
@@ -169,13 +174,14 @@
                  Hi, I&apos;m Moka. Tell me what you feel like eating and I&apos;ll dig through the
                  menus for you. Only restaurants that are open right now.
                </p>
+               <div className="mt-5"><ZonePicker zones={zones} /></div>
                <div className="mt-6 flex flex-wrap justify-center gap-2">
                  {SUGGESTIONS.map((s) => (
                    <button
                      key={s}
                      type="button"
                      onClick={() => void send(s)}
-                     disabled={loading}
+                     disabled={loading || !zone}
                      className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm font-medium hover:bg-brand-100 disabled:opacity-50"
                    >
                      {s}
@@ -242,7 +248,7 @@
 
                {loading && (
                  <div role="status" className="flex items-center gap-3">
-                   <MokaMascot variant="full" eating size={80} />
+                   <MokaMascot variant="full" eating size={104} />
                    <p className="text-sm text-charcoal-700">{PHRASES[phrase]}</p>
                  </div>
                )}
@@ -277,13 +283,13 @@
                readOnly={loading}
                onChange={(e) => setInput(e.target.value)}
                onKeyDown={onKeyDown}
-               placeholder="Ask Moka what to eat..."
+               placeholder={zone ? "Ask Moka what to eat..." : "Choose your area first..."}
                className="max-h-40 min-w-0 flex-1 resize-none bg-transparent px-3 py-2 outline-none [field-sizing:content]"
              />
              <button
                type="submit"
                aria-label="Send"
-               disabled={loading || !input.trim()}
+               disabled={loading || !zone || !input.trim()}
                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40"
              >
                <svg

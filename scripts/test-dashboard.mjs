@@ -18,6 +18,8 @@ const user = createClient(url, key, opts);
 let passed = 0;
 const ok = (name) => console.log("ok  ", ++passed, name);
 
+// place_order needs the customer's zone. Filled in below from each restaurant's own zone.
+const zoneOf = new Map();
 const place = (restaurantId, items) =>
   user.rpc("place_order", {
     p_restaurant_id: restaurantId,
@@ -25,6 +27,7 @@ const place = (restaurantId, items) =>
     p_address: "House 1, Street 2, Sample Area A, Test City",
     p_phone: "03001234567",
     p_note: "TEST ORDER (scripts/test-dashboard.mjs)",
+    p_zone_id: zoneOf.get(restaurantId) ?? null,
   });
 const setStatus = (id, status) => user.rpc("update_order_status", { p_order_id: id, p_new: status });
 const refused = (r) => Boolean(r.error) || (Array.isArray(r.data) && r.data.length === 0);
@@ -42,13 +45,16 @@ const me = (await user.auth.getUser()).data.user.id;
 
 const { data: rs, error: rsErr } = await user
   .from("restaurants")
-  .select("id, slug, owner_id, menu_items(id, name, price_pkr)")
+  .select("id, slug, owner_id, zone_id, menu_items(id, name, price_pkr)")
   .in("slug", ["karahi-house", "burger-lab"]);
 assert.ifError(rsErr);
 const karahi = rs.find((x) => x.slug === "karahi-house");
 const burger = rs.find((x) => x.slug === "burger-lab");
 assert.equal(karahi.owner_id, me, "Step 2 not done: this test account must own karahi-house");
 assert.notEqual(burger.owner_id, me, "this test account must NOT own burger-lab");
+assert.ok(karahi.zone_id && burger.zone_id, "both restaurants need a zone (set it in /admin)");
+zoneOf.set(karahi.id, karahi.zone_id);
+zoneOf.set(burger.id, burger.zone_id);
 const chicken = karahi.menu_items.find((i) => i.name === "Chicken Karahi (half)");
 const zinger = burger.menu_items.find((i) => i.name === "Zinger Burger");
 ok("test account owns Karahi House and not Burger Lab");

@@ -24,6 +24,7 @@ const place = (client, restaurantId, items) =>
     p_address: "House 1, Street 2, Sample Area A, Test City",
     p_phone: "03001234567",
     p_note: "TEST ORDER (scripts/test-orders.mjs)",
+    p_zone_id: restaurants.find((r) => r.id === restaurantId)?.zone_id ?? null,
   });
 let passed = 0;
 const ok = (name) => console.log("ok  ", ++passed, name);
@@ -31,7 +32,7 @@ const ok = (name) => console.log("ok  ", ++passed, name);
 // Public catalog read
 const { data: restaurants, error: catErr } = await anon
   .from("restaurants")
-  .select("id, slug, delivery_fee_pkr, min_order_pkr, menu_items(id, name, price_pkr)");
+  .select("id, slug, zone_id, delivery_fee_pkr, min_order_pkr, menu_items(id, name, price_pkr)");
 assert.ifError(catErr);
 const bySlug = (s) => restaurants.find((r) => r.slug === s);
 const karahi = bySlug("karahi-house");
@@ -102,5 +103,24 @@ ok("an item from another restaurant is refused");
 r = await place(user, karahi.id, []);
 assert.equal(r.error?.message, "bad_items");
 ok("an empty order is refused");
+
+// Zone checks: the database refuses a restaurant outside the customer's chosen area.
+const { data: zoneRows, error: zoneErr } = await anon.from("zones").select("id");
+assert.ifError(zoneErr);
+const otherZone = zoneRows.find((z) => z.id !== karahi.zone_id);
+assert.ok(otherZone, "need at least two zones (did migration 0008 run?)");
+const zonedCall = (zone) =>
+  user.rpc("place_order", {
+    p_restaurant_id: karahi.id,
+    p_items: [{ menu_item_id: chicken.id, quantity: 1 }],
+    p_address: "House 1, Street 2, Sample Area A, Test City",
+    p_phone: "03001234567",
+    ...(zone === undefined ? {} : { p_zone_id: zone }),
+  });
+r = await zonedCall(otherZone.id);
+assert.equal(r.error?.message, "wrong_zone");
+r = await zonedCall(undefined);
+assert.equal(r.error?.message, "wrong_zone");
+ok("ordering from a restaurant outside the chosen area is refused");
 
 console.log(`\n${passed} order checks passed. One real test order was created (note says TEST ORDER).`);
