@@ -489,3 +489,19 @@ Route (app)                          Revalidate  Expire
 - No image resizing or cropping: owners should upload a wide photo. Next.js optimises delivery.
 - Only owners have an upload screen; admins can write through the rules but have no screen yet.
 - No dish photos, no moderation of uploaded images, and the photo shows after the catalog cache refreshes (a few minutes).
+
+
+## Milestone 11: dish photos, navigation, discovery
+**Built:** 0013_dish_photos.sql (menu_items.image_path, set_dish_photo); dish photo upload (app\dashboard\photo-actions.ts, components\dish-photo-row.tsx) and thumbnails on menu pages; global sticky header (components\site-header.tsx) with area chip and cart count; side menu (components\side-menu.tsx, nav-menu.tsx) with role links; search, cuisine chips and "Open now" in components\restaurant-list.tsx; components\flow-steps.tsx on cart and checkout; account page as cards; landing page without its own header; scripts\test-dish-photos.mjs.
+
+**Decisions**
+- Dish photos reuse the restaurant-photos bucket and its folder-based policies; the file must be in <restaurant id>/dishes/<item id>-<time>.<ext>, and set_dish_photo checks ownership and the path.
+- One navigation system instead of scattered link rows: header for area and cart, side menu for everything else. Role links are hints; pages and database functions still check roles.
+- Search and filters run in the browser on the already-loaded list.
+
+**Results:** test-dish-photos, test-photos, test-orders, tsc, lint, build: [write what you saw] | browser checklist 1-9: [write what you saw]
+
+**Limitations**
+- Deleting a dish leaves its photo file behind (no cleanup yet).
+- The side menu costs one login check and one profile read per page view.
+- Search covers restaurant name, cuisine and area, not dish names. No saved addresses, order again, vouchers, favourites or live tracking yet.
