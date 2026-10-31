@@ -12,6 +12,8 @@ export type Restaurant = {
   minOrderPkr: number;
   isOpen: boolean;
   zoneId: string | null;
+  ratingAvg: number | null;
+  ratingCount: number;
 };
 export type MenuItem = {
   id: string;
@@ -23,6 +25,7 @@ export type MenuItem = {
 };
 export type RestaurantWithMenu = Restaurant & { items: MenuItem[] };
 export type Zone = { id: string; name: string };
+export type Review = { rating: number; comment: string | null; createdAt: string };
 
 type RestaurantRow = {
   id: string;
@@ -44,6 +47,7 @@ type MenuItemRow = {
   category: string;
   tags: string[];
 };
+type Ratings = Map<string, { avg: number; count: number }>;
 
 const COLUMNS =
   "id, slug, name, cuisine, area, eta_minutes, delivery_fee_pkr, min_order_pkr, is_open, zone_id";
@@ -59,7 +63,18 @@ function publicClient() {
   );
 }
 
-function toRestaurant(r: RestaurantRow): Restaurant {
+// Ratings are a bonus: if this fails, restaurants simply show as "New".
+async function loadRatings(): Promise<Ratings> {
+  const ratings: Ratings = new Map();
+  const { data } = await publicClient().rpc("restaurant_rating_stats");
+  for (const row of (data ?? []) as { s_restaurant_id: string; s_avg: number | string; s_count: number }[]) {
+    ratings.set(row.s_restaurant_id, { avg: Number(row.s_avg), count: row.s_count });
+  }
+  return ratings;
+}
+
+function toRestaurant(r: RestaurantRow, ratings: Ratings): Restaurant {
+  const rating = ratings.get(r.id);
   return {
     id: r.id,
     slug: r.slug,
@@ -71,6 +86,8 @@ function toRestaurant(r: RestaurantRow): Restaurant {
     minOrderPkr: r.min_order_pkr,
     isOpen: r.is_open,
     zoneId: r.zone_id,
+    ratingAvg: rating ? rating.avg : null,
+    ratingCount: rating ? rating.count : 0,
   };
 }
 
@@ -104,7 +121,8 @@ export async function getRestaurants(): Promise<Restaurant[]> {
 
   const { data, error } = await publicClient().from("restaurants").select(COLUMNS).order("name");
   if (error) throw new Error("Could not load restaurants");
-  return ((data ?? []) as RestaurantRow[]).map(toRestaurant);
+  const ratings = await loadRatings();
+  return ((data ?? []) as RestaurantRow[]).map((r) => toRestaurant(r, ratings));
 }
 
 export async function getRestaurantWithMenu(slug: string): Promise<RestaurantWithMenu | null> {
@@ -121,7 +139,8 @@ export async function getRestaurantWithMenu(slug: string): Promise<RestaurantWit
   if (!data) return null;
 
   const row = data as unknown as RestaurantRow & { menu_items: MenuItemRow[] };
-  return { ...toRestaurant(row), items: toItems(row.menu_items) };
+  const ratings = await loadRatings();
+  return { ...toRestaurant(row, ratings), items: toItems(row.menu_items) };
 }
 
 export async function getAllRestaurantsWithMenus(): Promise<RestaurantWithMenu[]> {
@@ -135,6 +154,26 @@ export async function getAllRestaurantsWithMenus(): Promise<RestaurantWithMenu[]
     .order("name");
   if (error) throw new Error("Could not load menus");
 
+  const ratings = await loadRatings();
   const rows = (data ?? []) as unknown as (RestaurantRow & { menu_items: MenuItemRow[] })[];
-  return rows.map((row) => ({ ...toRestaurant(row), items: toItems(row.menu_items) }));
+  return rows.map((row) => ({ ...toRestaurant(row, ratings), items: toItems(row.menu_items) }));
+}
+
+// Latest written reviews for a restaurant page. No names are ever stored with them.
+export async function getRecentReviews(restaurantId: string): Promise<Review[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("catalog");
+
+  const { data } = await publicClient()
+    .from("reviews")
+    .select("rating, comment, created_at")
+    .eq("restaurant_id", restaurantId)
+    .order("created_at", { ascending: false })
+    .limit(8);
+  return ((data ?? []) as { rating: number; comment: string | null; created_at: string }[]).map((r) => ({
+    rating: r.rating,
+    comment: r.comment,
+    createdAt: r.created_at,
+  }));
 }

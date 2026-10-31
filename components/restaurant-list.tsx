@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Restaurant } from "../lib/catalog";
 import { formatPKR } from "../lib/pk";
 import { useHydrated, useZone } from "../lib/zone-store";
+import { RatingBadge } from "./rating-badge";
 import { RestaurantBanner } from "./restaurant-banner";
 import { ListSkeleton } from "./skeleton";
 import { ZonePicker, type ZoneOption } from "./zone-picker";
@@ -65,6 +66,7 @@ export function RestaurantList({
                   {r.cuisine} · {r.area}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-charcoal-800">
+                  <RatingBadge avg={r.ratingAvg} count={r.ratingCount} />
                   <span className="rounded-full bg-brand-100 px-2.5 py-1">~{r.etaMinutes} min</span>
                   <span className="rounded-full bg-brand-100 px-2.5 py-1">
                     Delivery {formatPKR(r.deliveryFeePkr)}

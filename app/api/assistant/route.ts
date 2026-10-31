@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllRestaurantsWithMenus } from "../../../lib/catalog";
 import type { RestaurantWithMenu } from "../../../lib/catalog";
+import { createClient } from "../../../lib/supabase/server";
 import { answerQuestion } from "../../../lib/assistant/answer";
 import { toAssistantItems, toPublicAnswer } from "../../../lib/assistant/convert";
 import { parseTurns } from "../../../lib/assistant/conversation";
@@ -9,12 +10,35 @@ import { checkAiAllowance, getClientIp } from "../../../lib/assistant/ratelimit"
 
 const MAX_BODY_CHARS = 8000;
 const UUID = /^[0-9a-f-]{36}$/i;
+const LOCKED_REPLY =
+  "Here are real dishes that match, found by my simple matching. Get your first order delivered and I'll unlock my chattier mode.";
 
 function reply(body: unknown, status = 200) {
   return NextResponse.json(body, {
     status,
     headers: { "Cache-Control": "no-store" },
   });
+}
+
+// How many delivered orders unlock the AI sentence. 0 turns the lock off (handy for dev and tests).
+function unlockThreshold(): number {
+  const raw = process.env.ASSISTANT_UNLOCK_ORDERS?.trim();
+  if (!raw) return 1;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 0 ? n : 1;
+}
+
+// Logged-out visitors and any error count as "not unlocked": the safe, free path.
+async function deliveredOrders(): Promise<number> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getClaims();
+    if (!data?.claims) return 0;
+    const { data: count } = await supabase.rpc("my_delivered_order_count");
+    return typeof count === "number" ? count : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function POST(request: Request) {
@@ -57,9 +81,18 @@ export async function POST(request: Request) {
   }
   const items = toAssistantItems(restaurants);
 
-  // No key/model configured -> null -> rules. Only count usage when AI is possible.
+  // No key/model configured -> null -> rules. The AI sentence is only for customers who have
+  // had an order delivered; locked requests never touch the rate limiter or the AI.
   let callModel = createModelCall();
   let limited: string | null = null;
+  let locked = false;
+  if (callModel) {
+    const needed = unlockThreshold();
+    if (needed > 0 && (await deliveredOrders()) < needed) {
+      callModel = null;
+      locked = true;
+    }
+  }
   if (callModel) {
     const allowance = checkAiAllowance(getClientIp(request.headers));
     if (!allowance.allowed) {
@@ -77,6 +110,7 @@ export async function POST(request: Request) {
         source: outcome.source,
         fallback: outcome.fallback ?? null,
         limited,
+        locked,
         turns: turns.length,
         items: items.length,
         picks: outcome.picks.length,
@@ -93,5 +127,6 @@ export async function POST(request: Request) {
     return r ? [{ ...pick, deliveryFeePkr: r.deliveryFeePkr, minOrderPkr: r.minOrderPkr }] : [];
   });
 
-  return reply({ ...answer, picks });
+  const text2 = locked && picks.length > 0 ? LOCKED_REPLY : answer.reply;
+  return reply({ ...answer, reply: text2, picks, locked });
 }

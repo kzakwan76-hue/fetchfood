@@ -9,10 +9,12 @@ import { CancelOrderButton } from "../../../components/cancel-order-button";
 import { ClearCart } from "../../../components/clear-cart";
 import { OrderTimeline } from "../../../components/order-timeline";
 import { RefreshButton } from "../../../components/refresh-button";
+import { ReviewForm } from "../../../components/review-form";
 import { Skeleton } from "../../../components/skeleton";
 
 type OrderRow = {
   id: string;
+  customer_id: string;
   status: string;
   subtotal_pkr: number;
   delivery_fee_pkr: number;
@@ -65,12 +67,20 @@ async function OrderDetails({ params, searchParams }: Props) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, status, subtotal_pkr, delivery_fee_pkr, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, unit_price_pkr, quantity)",
+      "id, customer_id, status, subtotal_pkr, delivery_fee_pkr, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, unit_price_pkr, quantity)",
     )
     .eq("id", id)
     .maybeSingle();
   const order = data as unknown as OrderRow | null;
   if (!order) notFound();
+
+  // Only the customer who placed a delivered order can review it.
+  const isCustomer = order.customer_id === claimsData.claims.sub;
+  let review: { r_rating: number; r_comment: string | null } | null = null;
+  if (isCustomer && order.status === "delivered") {
+    const { data: rv } = await supabase.rpc("my_order_review", { p_order_id: id });
+    review = ((rv ?? []) as { r_rating: number; r_comment: string | null }[])[0] ?? null;
+  }
 
   return (
     <div className="mt-4 space-y-4">
@@ -104,6 +114,20 @@ async function OrderDetails({ params, searchParams }: Props) {
         </div>
       )}
       {order.status === "placed" && <CancelOrderButton orderId={order.id} />}
+
+      {isCustomer && order.status === "delivered" &&
+        (review ? (
+          <div className="rounded-3xl border border-brand-200 bg-white p-4 shadow-card">
+            <p className="font-bold text-charcoal-900">Your review</p>
+            <p className="mt-1 text-xl text-amber-500" aria-label={`${review.r_rating} out of 5 stars`}>
+              {"★".repeat(review.r_rating) + "☆".repeat(5 - review.r_rating)}
+            </p>
+            {review.r_comment && <p className="mt-1 text-sm text-charcoal-800">{review.r_comment}</p>}
+            <p className="mt-2 text-xs text-charcoal-700">Thanks! Your first delivered order also unlocks Moka&apos;s chatty mode.</p>
+          </div>
+        ) : (
+          <ReviewForm orderId={order.id} />
+        ))}
 
       <ul className="divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
         {order.order_items.map((item) => (

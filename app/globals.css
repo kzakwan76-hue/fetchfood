@@ -44,6 +44,23 @@ body {
   outline-offset: 2px;
 }
 
+/* Chat composer: no hard rectangle. The whole rounded box glows while you type. */
+#craving:focus-visible {
+  outline: none;
+}
+form:has(#craving) {
+  transition: border-color 0.2s ease, box-shadow 0.25s ease;
+}
+form:has(#craving:focus) {
+  border-color: var(--color-brand-400);
+  box-shadow: 0 0 0 3px rgb(249 115 22 / 0.18), 0 0 18px 2px rgb(249 115 22 / 0.3);
+  animation: glow 2.6s ease-in-out infinite;
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgb(249 115 22 / 0.16), 0 0 16px 2px rgb(249 115 22 / 0.26); }
+  50% { box-shadow: 0 0 0 4px rgb(249 115 22 / 0.24), 0 0 28px 6px rgb(249 115 22 / 0.4); }
+}
+
 /* Loading placeholder shape (see components/skeleton.tsx). */
 .skeleton {
   border-radius: 0.75rem;
@@ -74,4 +91,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .skeleton, .rise { animation: none; }
+  form:has(#craving:focus) { animation: none; }
 }

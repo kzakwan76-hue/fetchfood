@@ -3,9 +3,10 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AddToCart } from "../../../components/add-to-cart";
 import { CartBar } from "../../../components/cart-bar";
+import { RatingBadge } from "../../../components/rating-badge";
 import { RestaurantBanner } from "../../../components/restaurant-banner";
 import { Skeleton } from "../../../components/skeleton";
-import { getRestaurants, getRestaurantWithMenu } from "../../../lib/catalog";
+import { getRecentReviews, getRestaurants, getRestaurantWithMenu } from "../../../lib/catalog";
 import { formatPKR } from "../../../lib/pk";
 
 export async function generateStaticParams() {
@@ -40,10 +41,15 @@ function MenuSkeleton() {
   );
 }
 
+function stars(rating: number): string {
+  return "★".repeat(rating) + "☆".repeat(5 - rating);
+}
+
 async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const restaurant = await getRestaurantWithMenu(slug);
   if (!restaurant) notFound();
+  const reviews = (await getRecentReviews(restaurant.id)).filter((r) => r.comment);
 
   const categories = [...new Set(restaurant.items.map((i) => i.category))];
   const forCart = {
@@ -64,6 +70,7 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
             {restaurant.cuisine} · {restaurant.area}
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-charcoal-800">
+            <RatingBadge avg={restaurant.ratingAvg} count={restaurant.ratingCount} />
             <span className="rounded-full bg-brand-100 px-2.5 py-1">~{restaurant.etaMinutes} min</span>
             <span className="rounded-full bg-brand-100 px-2.5 py-1">
               Delivery {formatPKR(restaurant.deliveryFeePkr)}
@@ -127,6 +134,30 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
           </ul>
         </section>
       ))}
+
+      {reviews.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-bold text-charcoal-900">What customers say</h2>
+          <ul className="mt-2 divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
+            {reviews.map((r, i) => (
+              <li key={i} className="p-4 text-sm">
+                <p className="text-amber-500" aria-label={`${r.rating} out of 5 stars`}>
+                  {stars(r.rating)}
+                </p>
+                <p className="mt-1 text-charcoal-800">{r.comment}</p>
+                <p className="mt-1 text-xs text-charcoal-700">
+                  A customer ·{" "}
+                  {new Date(r.createdAt).toLocaleDateString("en-PK", {
+                    timeZone: "Asia/Karachi",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   );
 }
