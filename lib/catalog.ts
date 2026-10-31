@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { cacheLife, cacheTag } from "next/cache";
+import { photoUrl } from "./photo";
 
 export type Restaurant = {
   id: string;
@@ -12,6 +13,7 @@ export type Restaurant = {
   minOrderPkr: number;
   isOpen: boolean;
   zoneId: string | null;
+  imageUrl: string | null;
   ratingAvg: number | null;
   ratingCount: number;
 };
@@ -38,6 +40,7 @@ type RestaurantRow = {
   min_order_pkr: number;
   is_open: boolean;
   zone_id: string | null;
+  image_path: string | null;
 };
 type MenuItemRow = {
   id: string;
@@ -50,7 +53,7 @@ type MenuItemRow = {
 type Ratings = Map<string, { avg: number; count: number }>;
 
 const COLUMNS =
-  "id, slug, name, cuisine, area, eta_minutes, delivery_fee_pkr, min_order_pkr, is_open, zone_id";
+  "id, slug, name, cuisine, area, eta_minutes, delivery_fee_pkr, min_order_pkr, is_open, zone_id, image_path";
 const MENU_COLUMNS = "menu_items(id, name, description, price_pkr, category, tags)";
 
 // Public catalog data needs no login, so this client has no cookies.
@@ -86,6 +89,7 @@ function toRestaurant(r: RestaurantRow, ratings: Ratings): Restaurant {
     minOrderPkr: r.min_order_pkr,
     isOpen: r.is_open,
     zoneId: r.zone_id,
+    imageUrl: photoUrl(r.image_path),
     ratingAvg: rating ? rating.avg : null,
     ratingCount: rating ? rating.count : 0,
   };

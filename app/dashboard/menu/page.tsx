@@ -3,11 +3,19 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
+import { photoUrl } from "../../../lib/photo";
 import { AddMenuItemForm } from "../../../components/add-menu-item-form";
 import { MenuItemEditor } from "../../../components/menu-item-editor";
+import { RestaurantPhotoCard } from "../../../components/restaurant-photo-card";
 
 type MenuRow = { id: string; name: string; price_pkr: number; category: string; is_available: boolean };
-type RestaurantRow = { id: string; name: string; menu_items: MenuRow[] };
+type RestaurantRow = {
+  id: string;
+  name: string;
+  cuisine: string;
+  image_path: string | null;
+  menu_items: MenuRow[];
+};
 
 export default function MenuManagerPage() {
   return (
@@ -34,7 +42,7 @@ async function MenuManager() {
 
   const { data } = await supabase
     .from("restaurants")
-    .select("id, name, menu_items(id, name, price_pkr, category, is_available)")
+    .select("id, name, cuisine, image_path, menu_items(id, name, price_pkr, category, is_available)")
     .eq("owner_id", claimsData.claims.sub)
     .order("name");
   const restaurants = (data ?? []) as unknown as RestaurantRow[];
@@ -48,7 +56,8 @@ async function MenuManager() {
       {restaurants.map((r) => (
         <section key={r.id}>
           <h2 className="text-lg font-semibold text-neutral-900">{r.name}</h2>
-          <ul className="mt-2 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+          <RestaurantPhotoCard restaurantId={r.id} cuisine={r.cuisine} imageUrl={photoUrl(r.image_path)} />
+          <ul className="mt-4 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
             {[...r.menu_items]
               .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
               .map((m) => (

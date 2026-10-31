@@ -48,7 +48,7 @@ export function RestaurantList({
               href={`/restaurants/${r.slug}`}
               className="block overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card motion-safe:transition motion-safe:hover:-translate-y-0.5 hover:shadow-lift"
             >
-              <RestaurantBanner cuisine={r.cuisine} dimmed={!r.isOpen} />
+              <RestaurantBanner cuisine={r.cuisine} imageUrl={r.imageUrl} dimmed={!r.isOpen} />
               <div className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-lg font-bold text-charcoal-900">{r.name}</h2>

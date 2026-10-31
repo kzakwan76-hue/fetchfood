@@ -63,7 +63,7 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
   return (
     <>
       <div className="mt-4 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
-        <RestaurantBanner cuisine={restaurant.cuisine} size="hero" dimmed={!restaurant.isOpen} />
+        <RestaurantBanner cuisine={restaurant.cuisine} imageUrl={restaurant.imageUrl} size="hero" dimmed={!restaurant.isOpen} />
         <div className="p-4">
           <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{restaurant.name}</h1>
           <p className="mt-0.5 text-sm text-charcoal-700">
