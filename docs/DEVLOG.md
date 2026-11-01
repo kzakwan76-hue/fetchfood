@@ -520,3 +520,21 @@ Route (app)                          Revalidate  Expire
 **Limitations**
 - No address edit (delete and re-save), no map or location picker, no favourites filter on the restaurant list.
 - Search still covers restaurant name, cuisine and area, not dishes.
+
+
+## Milestone 13: pre-launch hardening
+**Built:** 0015_hardening.sql (orders.idempotency_key with a unique index per customer, place_order with p_idem, indexes on orders); idempotency key in components\checkout-form.tsx and app\checkout\actions.ts; app\auth\confirm\route.ts and app\auth\confirm-failed\page.tsx; production area requirement in app\api\assistant\route.ts; security headers in next.config.ts; scripts\test-idempotency.mjs and scripts\test-all.mjs; docs\LAUNCH.md.
+
+**Decisions**
+- A retry with the same key returns the first order. Two simultaneous identical requests are resolved by the unique index (the loser catches the violation and returns the winner's order).
+- The confirm route accepts only sign-up types and always redirects to a fixed page, never to an address from the link.
+- The assistant requires an area only when NODE_ENV is production, so dev scripts keep working.
+- Security headers only for now (no CSP yet).
+
+**Results:** test-idempotency, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-5: [write what you saw]
+
+**Limitations**
+- Rate limiting is still in memory (weak on serverless); the AI spend limit is the real guard.
+- Owners can still mark their own orders delivered (unlock and review farming).
+- Deleting an account still cascades to its orders (not decided yet).
+- No CSP, no automated UI tests, email confirmation untested until it is switched on.
