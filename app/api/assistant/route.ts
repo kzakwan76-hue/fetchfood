@@ -57,10 +57,13 @@ export async function POST(request: Request) {
   const turns = parseTurns(body);
   if (!turns) return reply({ error: "Invalid conversation" }, 400);
 
-  // The website always sends the customer's area. Dev scripts may omit it (all areas then).
-  // The real guarantee is place_order, which refuses restaurants outside the chosen area.
+  // The website always sends the customer's area. In production the area is required;
+  // in development the scripts may omit it (all areas then). place_order is the real guarantee.
   const rawZone =
     typeof body === "object" && body !== null ? (body as Record<string, unknown>).zoneId : undefined;
+  if (rawZone === undefined && process.env.NODE_ENV === "production") {
+    return reply({ error: "Choose your area first" }, 400);
+  }
   if (rawZone !== undefined && (typeof rawZone !== "string" || !UUID.test(rawZone))) {
     return reply({ error: "Invalid area" }, 400);
   }

@@ -56,6 +56,10 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
   const zoneId = text(formData, "zoneId");
   if (!UUID.test(zoneId)) return fail("Choose your delivery area on the restaurants page first.");
 
+  // One key per checkout page: a repeated submit returns the first order instead of making a second.
+  const idem = text(formData, "idem");
+  if (idem && !UUID.test(idem)) return fail("This page is out of date. Please reload it and try again.");
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("place_order", {
     p_restaurant_id: restaurantId,
@@ -64,18 +68,20 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     p_phone: normalizePkPhone(values.phone),
     p_note: values.note || null,
     p_zone_id: zoneId,
+    p_idem: idem || null,
   });
 
   if (error) {
     if (error.message === "not_authenticated") redirect("/login");
     return fail(MESSAGES[error.message] ?? "Could not place your order. Please try again.");
   }
-       // Saving the address is a convenience: if it fails, the order is still placed.
-     if (text(formData, "saveAddress") === "on") {
-       await supabase.rpc("save_address", {
-         p_label: text(formData, "saveLabel").slice(0, 30) || "Saved",
-         p_address: values.address,
-       });
-     }
-     redirect(`/orders/${data}?placed=1`);
+
+  // Saving the address is a convenience: if it fails, the order is still placed.
+  if (text(formData, "saveAddress") === "on") {
+    await supabase.rpc("save_address", {
+      p_label: text(formData, "saveLabel").slice(0, 30) || "Saved",
+      p_address: values.address,
+    });
+  }
+  redirect(`/orders/${data}?placed=1`);
 }

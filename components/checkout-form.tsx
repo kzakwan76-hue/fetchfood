@@ -24,6 +24,8 @@ export function CheckoutForm({
   const zone = useZone();
   const [state, formAction, pending] = useActionState(placeOrder, {});
   const [address, setAddress] = useState("");
+  // Same key for every submit from this page, so a double tap or retry cannot create two orders.
+  const [idem] = useState(() => crypto.randomUUID());
 
   if (cart.lines.length === 0) {
     return (
@@ -60,6 +62,7 @@ export function CheckoutForm({
     <form action={formAction} className="mt-6 space-y-4">
       <input type="hidden" name="cart" value={payload} />
       <input type="hidden" name="zoneId" value={zone.id} />
+      <input type="hidden" name="idem" value={idem} />
 
       <p className="text-sm text-neutral-600">
         {cart.restaurantName} · {formatPKR(subtotalPkr(cart))} + {formatPKR(cart.deliveryFeePkr)} delivery
