@@ -538,3 +538,22 @@ Route (app)                          Revalidate  Expire
 - Owners can still mark their own orders delivered (unlock and review farming).
 - Deleting an account still cascades to its orders (not decided yet).
 - No CSP, no automated UI tests, email confirmation untested until it is switched on.
+
+
+## Milestone 14: money, admin console, rider-only delivery
+**Built:** 0016_ledger.sql (platform_settings, restaurants.commission_bps, orders ledger columns and sum check, restaurant_payouts, rider_deposits, owner_mark_ready, rider-only update_order_status, ready-only rider_available_orders, rider_claim_order with cash limit, rider_mark_delivered writes the breakdown, rider_wallet, owner_earnings, admin settings, payout, deposit, overview, orders, order detail, riders and restaurants functions); admin console under /admin/* with its own layout and nav; money forms; /dashboard/earnings; rider wallet; scripts\test-ledger.mjs.
+
+**Decisions**
+- Placeholder rates: 15% commission, riders keep 80% of the delivery fee, rider cash limit Rs. 5,000. All editable at /admin/money, and every order snapshots the rates when it is delivered.
+- Owners can accept, prepare and mark food ready; only riders can mark out for delivery or delivered. This also closes the unlock and review farming gap.
+- Cash on delivery means riders hold the cash: restaurants are owed subtotal minus commission, riders owe total minus their delivery share, and settlements record payouts and deposits (capped at the balance).
+- Money columns are hidden from customers and the public by column-level grants; only admin functions and the owner's own earnings function read them.
+- Orders and reviews are kept when an account is deleted (customer_id set to null).
+
+**Results:** test-ledger, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-8: [write what you saw]
+
+**Limitations**
+- Only orders delivered after this migration count in the ledger.
+- No online payments, no scheduled settlements, no CSV export, no per-rider pay bonuses, no refunds or disputes.
+- A rider who disappears with cash is a manual matter; the cash limit only reduces the risk.
+- Tax and business registration are not handled.
