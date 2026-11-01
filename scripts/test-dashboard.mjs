@@ -65,11 +65,10 @@ assert.ifError(r.error);
 const own = r.data;
 assert.ifError((await setStatus(own, "accepted")).error);
 assert.equal((await setStatus(own, "delivered")).error?.message, "invalid_transition");
-assert.ifError((await setStatus(own, "preparing")).error);
-assert.ifError((await setStatus(own, "out_for_delivery")).error);
-assert.ifError((await setStatus(own, "delivered")).error);
-assert.equal((await setStatus(own, "cancelled")).error?.message, "invalid_transition");
-ok("owner moves an order through the allowed steps; skipping or reversing is refused");
+assert.equal((await setStatus(own, "out_for_delivery")).error?.message, "invalid_transition");
+assert.ifError((await setStatus(own, "cancelled")).error);
+assert.equal((await setStatus(own, "accepted")).error?.message, "invalid_transition");
+ok("owner can accept and cancel, delivery steps are refused, reversing is refused");
 
 // Non-owner customer: may only cancel their own order while it is "placed"
 r = await place(burger.id, [{ menu_item_id: zinger.id, quantity: 1 }]);

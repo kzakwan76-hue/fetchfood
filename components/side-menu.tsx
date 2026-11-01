@@ -30,7 +30,7 @@ function workLinks(role: string | null): Entry[] {
   }
   if (role === "rider") out.push({ href: "/rider", label: "Rider deliveries", emoji: "🛵" });
   if (role === "admin") {
-    out.push({ href: "/admin", label: "Admin", emoji: "🛠️" });
+    out.push({ href: "/admin/overview", label: "Admin console", emoji: "🛠️" });
     out.push({ href: "/admin/feedback", label: "Feedback inbox", emoji: "📥" });
   }
   return out;

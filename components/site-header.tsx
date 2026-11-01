@@ -34,7 +34,7 @@ export function SiteHeader({ children }: { children: ReactNode }) {
   const cart = useCart();
   const zone = useZone();
   const hydrated = useHydrated();
-  if (HIDDEN.includes(pathname)) return null;
+  if (HIDDEN.includes(pathname) || pathname.startsWith("/admin")) return null;
 
   const count = itemCount(cart);
 

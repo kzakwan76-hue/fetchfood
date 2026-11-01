@@ -12,6 +12,7 @@ import { RestaurantOpenToggle } from "../../components/restaurant-open-toggle";
 type OrderRow = {
   id: string;
   rider_id: string | null;
+  ready_at: string | null;
   status: string;
   total_pkr: number;
   delivery_address: string;
@@ -26,7 +27,7 @@ export default function DashboardPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <div className="flex items-center justify-between text-sm font-semibold text-brand-600">
-        <Link href="/account">← Account</Link>
+        <Link href="/dashboard/earnings">Earnings</Link>
         <Link href="/dashboard/menu">Manage menu →</Link>
       </div>
       <h1 className="mt-3 text-2xl font-bold text-neutral-900">Restaurant dashboard</h1>
@@ -43,8 +44,6 @@ async function DashboardContent() {
   const { data: claimsData } = await supabase.auth.getClaims();
   if (!claimsData?.claims) redirect("/login");
 
-  // Only restaurants this user owns. (RLS would also let a customer see their OWN orders,
-  // so we filter by restaurant below to keep this a kitchen view.)
   const { data: restaurants } = await supabase
     .from("restaurants")
     .select("id, name, is_open")
@@ -62,7 +61,7 @@ async function DashboardContent() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, rider_id, status, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, quantity)",
+      "id, rider_id, ready_at, status, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, quantity)",
     )
     .in("restaurant_id", restaurants.map((r) => r.id))
     .order("created_at", { ascending: false })
@@ -116,7 +115,12 @@ async function DashboardContent() {
                 </p>
                 {o.note && <p className="text-sm text-neutral-700">Note: {o.note}</p>}
                 <p className="mt-1 text-sm font-semibold text-neutral-900">Cash to collect: {formatPKR(o.total_pkr)}</p>
-                <OrderActions orderId={o.id} status={o.status} hasRider={o.rider_id !== null} />
+                <OrderActions
+                  orderId={o.id}
+                  status={o.status}
+                  hasRider={o.rider_id !== null}
+                  ready={o.ready_at !== null}
+                />
               </li>
             ))}
           </ul>

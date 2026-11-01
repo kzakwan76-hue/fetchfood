@@ -22,7 +22,7 @@ function tilesFor(role: string | null | undefined): Tile[] {
   }
   if (role === "rider") tiles.push({ href: "/rider", label: "Rider deliveries", hint: "Pick up and deliver", emoji: "🛵" });
   if (role === "admin") {
-    tiles.push({ href: "/admin", label: "Admin", hint: "Zones, roles, restaurants", emoji: "🛠️" });
+    tiles.push({ href: "/admin/overview", label: "Admin console", hint: "Orders, money, setup", emoji: "🛠️" });
     tiles.push({ href: "/admin/feedback", label: "Feedback inbox", hint: "What customers say", emoji: "📥" });
   }
   return tiles;

@@ -7,6 +7,7 @@ import { formatPKR } from "../../lib/pk";
 import { formatOrderTime } from "../../lib/order-status";
 import { RefreshButton } from "../../components/refresh-button";
 import { RiderButton } from "../../components/rider-button";
+import { RiderWallet } from "../../components/rider-wallet";
 import { ListSkeleton } from "../../components/skeleton";
 
 type Available = {
@@ -77,6 +78,7 @@ async function RiderContent() {
 
   return (
     <div className="mt-4 space-y-8">
+      <RiderWallet />
       <p className="text-sm text-neutral-700">
         Your zone: <strong>{zone?.name ?? "unknown"}</strong>
       </p>
