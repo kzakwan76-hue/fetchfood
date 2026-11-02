@@ -557,3 +557,22 @@ Route (app)                          Revalidate  Expire
 - No online payments, no scheduled settlements, no CSV export, no per-rider pay bonuses, no refunds or disputes.
 - A rider who disappears with cash is a manual matter; the cash limit only reduces the risk.
 - Tax and business registration are not handled.
+
+
+## Milestone 15: rider verification, notifications, call confirmation, full delivery fee to riders
+**Built:** 0017_riders_notifications.sql (rider_profiles, private rider-documents bucket, submit_rider_application, rider_my_application, admin_rider_applications, admin_rider_kyc, admin_review_rider, stricter admin_set_role, approved-only rider functions with a personal cash limit, rider_my_orders with the call time, rider_confirm_call, admin_order_call, notifications with an orders trigger, my_unread_notifications, mark_notifications_read); /rider/apply; admin rider applications and a full rider profile page; notification bell and /notifications; rider call button; scripts\test-rider-kyc.mjs; riders keep 100% of the delivery fee.
+
+**Decisions**
+- Alerts are in-app (database trigger, header bell, beep on new). SMS, WhatsApp and automated calls need a provider and are left for later (a Supabase Database Webhook on notifications can send them).
+- The confirmation call is tap-to-call plus the rider's own confirmation, stored and visible to admin.
+- Riders can only exist through an approved application (CNIC, address, emergency contact, guarantor, photos in a private bucket). Approval sets zone, security deposit and an optional personal cash limit. Suspending blocks new orders. A rider holding cash cannot be demoted.
+- The rider share of the delivery fee is fixed at 100%; the setting was removed from the admin screen.
+- Notification trigger errors are swallowed so an order never fails because of an alert.
+
+**Results:** test-rider-kyc, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-10: [write what you saw]
+
+**Limitations**
+- Real SMS, WhatsApp, push and automated calls are not built. The call confirmation is the rider's own claim.
+- ID photos are viewed by an admin; there is no automatic ID verification, and the security deposit is only recorded, not held in any system.
+- CNIC data is personal data: it needs a privacy policy and careful access, and deleting an account deletes its rider profile (cascade).
+- Notifications are never deleted, and the bell polls every 30 seconds (no realtime).
