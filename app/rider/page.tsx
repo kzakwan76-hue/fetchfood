@@ -8,6 +8,7 @@ import { formatOrderTime } from "../../lib/order-status";
 import { RefreshButton } from "../../components/refresh-button";
 import { RiderButton } from "../../components/rider-button";
 import { RiderWallet } from "../../components/rider-wallet";
+import { RiderCall } from "../../components/rider-call";
 import { ListSkeleton } from "../../components/skeleton";
 
 type Available = {
@@ -23,6 +24,7 @@ type Mine = Available & {
   o_phone: string;
   o_note: string | null;
   o_items: string | null;
+  o_called: string | null;
 };
 
 export default function RiderPage() {
@@ -106,6 +108,7 @@ async function RiderContent() {
                 </p>
                 {o.o_note && <p className="text-neutral-700">Note: {o.o_note}</p>}
                 <p className="mt-1 font-semibold text-neutral-900">Cash to collect: {formatPKR(o.o_total)}</p>
+                <RiderCall orderId={o.o_id} phone={o.o_phone} calledAt={o.o_called} />
                 <div className="flex flex-wrap gap-2">
                   <RiderButton orderId={o.o_id} intent="deliver" label="Mark delivered" />
                   <RiderButton

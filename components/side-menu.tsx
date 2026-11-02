@@ -17,6 +17,7 @@ const ACCOUNT: Entry[] = [
   { href: "/orders", label: "My orders", emoji: "📦" },
   { href: "/favourites", label: "Favourites", emoji: "❤️" },
   { href: "/addresses", label: "Saved addresses", emoji: "🏡" },
+  { href: "/rider/apply", label: "Ride with us", emoji: "🛵" },
   { href: "/feedback", label: "Send feedback", emoji: "💬" },
   { href: "/account", label: "Account", emoji: "👤" },
 ];

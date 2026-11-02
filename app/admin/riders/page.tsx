@@ -22,25 +22,36 @@ export default function AdminRidersPage() {
 async function Riders() {
   await connection();
   const supabase = await requireAdmin();
-  const { data } = await supabase.rpc("admin_riders");
+  const [{ data }, { data: apps }] = await Promise.all([
+    supabase.rpc("admin_riders"),
+    supabase.rpc("admin_rider_applications"),
+  ]);
   const riders = (data ?? []) as RiderRow[];
-  if (riders.length === 0) return <p className="mt-4 text-sm text-neutral-600">No riders yet. Set a role in Setup.</p>;
+  const pending = ((apps ?? []) as { a_status: string }[]).filter((a) => a.a_status === "pending").length;
 
   return (
-    <ul className="mt-4 space-y-3">
-      {riders.map((r) => (
-        <li key={r.r_id}>
-          <Link href={`/admin/riders/${r.r_id}`} className={`${card} block hover:border-brand-500`}>
-            <p className="font-bold text-charcoal-900">{r.r_name ?? "No name"}</p>
-            <p className="text-neutral-700">{r.r_email} · {r.r_phone ?? "no phone"}</p>
-            <p className="text-neutral-700">Zone: {r.r_zone ?? "none (sees no orders)"}</p>
-            <p className="mt-1 text-neutral-800">
-              {r.r_delivered} delivered · {r.r_active} on the road · holds{" "}
-              <strong>{formatPKR(r.r_held)}</strong>
-            </p>
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      <Link href="/admin/riders/applications" className={`${card} mt-4 block font-semibold hover:border-brand-500 ${pending > 0 ? "border-amber-300 bg-amber-50" : ""}`}>
+        Applications waiting for review: {pending} →
+      </Link>
+      {riders.length === 0 ? (
+        <p className="mt-4 text-sm text-neutral-600">No approved riders yet.</p>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {riders.map((r) => (
+            <li key={r.r_id}>
+              <Link href={`/admin/riders/${r.r_id}`} className={`${card} block hover:border-brand-500`}>
+                <p className="font-bold text-charcoal-900">{r.r_name ?? "No name"}</p>
+                <p className="text-neutral-700">{r.r_email} · {r.r_phone ?? "no phone"}</p>
+                <p className="text-neutral-700">Zone: {r.r_zone ?? "none (sees no orders)"}</p>
+                <p className="mt-1 text-neutral-800">
+                  {r.r_delivered} delivered · {r.r_active} on the road · holds <strong>{formatPKR(r.r_held)}</strong>
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }

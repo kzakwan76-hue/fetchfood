@@ -12,7 +12,7 @@ function Msg({ error, ok }: { error?: string; ok?: string }) {
   return null;
 }
 
-export function SettingsForm({ commissionPct, riderPct, limit }: { commissionPct: number; riderPct: number; limit: number }) {
+export function SettingsForm({ commissionPct, limit }: { commissionPct: number; limit: number }) {
   const [state, action, pending] = useActionState(updateSettings, {});
   return (
     <form action={action} className="space-y-3">
@@ -20,12 +20,9 @@ export function SettingsForm({ commissionPct, riderPct, limit }: { commissionPct
         Default commission on food (%)
         <input name="commission" type="number" step="0.01" min={0} max={50} required defaultValue={commissionPct} className={input} />
       </label>
+      <p className="text-neutral-600">Riders keep 100% of the delivery fee.</p>
       <label className="block font-medium">
-        Rider keeps this % of the delivery fee
-        <input name="rider" type="number" step="0.01" min={0} max={100} required defaultValue={riderPct} className={input} />
-      </label>
-      <label className="block font-medium">
-        Rider cash limit (Rs.). New orders are blocked at this amount.
+        Default rider cash limit (Rs.). New orders are blocked at this amount.
         <input name="limit" type="number" min={0} max={1000000} required defaultValue={limit} className={input} />
       </label>
       <Msg {...state} />

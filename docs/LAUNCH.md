@@ -2,7 +2,7 @@
 
 ## 1. Production Supabase project (separate from your dev project)
 1. Create a new Supabase project. Never reuse the dev one for real customers.
-2. In the SQL Editor run every file in supabase\migrations in order, 0001 to 0016, once each.
+2. In the SQL Editor run every file in supabase\migrations in order, 0001 to 0017, once each.
 3. Migration 0002 seeds four SAMPLE restaurants. Before launch delete them:
    delete from public.restaurants where slug in ('karahi-house','burger-lab','biryani-junction','desi-dhaba');
    (This only works while no orders reference them, so do it before real traffic.)

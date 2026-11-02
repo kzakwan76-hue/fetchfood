@@ -11,12 +11,14 @@ const FUNCTIONS: Record<string, string> = {
   claim: "rider_claim_order",
   release: "rider_release_order",
   deliver: "rider_mark_delivered",
+  called: "rider_confirm_call",
 };
 
 const MESSAGES: Record<string, string> = {
   not_rider: "Only riders can do this.",
   order_not_found: "Order not found.",
   not_available: "Someone else already took this order.",
+  kyc_required: "Your rider profile isn't approved yet.",
   cash_limit: "You are holding too much cash. Hand it in to FetchFood, then take new orders.",
   wrong_zone: "This order is outside your zone.",                      
   too_many: "You already have 3 active deliveries. Finish one first.",

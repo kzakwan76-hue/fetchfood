@@ -29,6 +29,8 @@ const MESSAGES: Record<string, string> = {
   zone_not_found: "That zone doesn't exist.",
   restaurant_not_found: "Restaurant not found.",
   not_a_rider: "That account is not a rider. Set its role to rider first.",
+  needs_application: "Riders must apply with their CNIC and be approved under Admin > Riders > Applications.",
+  rider_holds_cash: "This rider still holds cash. Record their deposit first.",
 };
 
 function explain(message: string): string {

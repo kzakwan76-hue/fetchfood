@@ -32,6 +32,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   const { data } = await supabase.rpc("admin_order_detail", { p_id: id });
   const d = ((data ?? []) as D[])[0];
   if (!d) notFound();
+  const { data: called } = await supabase.rpc("admin_order_call", { p_id: id });
 
   return (
     <div className="mt-4 space-y-4">
@@ -43,6 +44,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         <dl className="mt-2">
           <Line label="Placed" value={formatOrderTime(d.d_created)} />
           <Line label="Ready for pickup" value={d.d_ready ? formatOrderTime(d.d_ready) : "not yet"} />
+          <Line label="Rider called customer" value={called ? formatOrderTime(String(called)) : "not recorded"} />
           <Line label="Delivered" value={d.d_delivered ? formatOrderTime(d.d_delivered) : "not yet"} />
           <Line
             label="Restaurant"

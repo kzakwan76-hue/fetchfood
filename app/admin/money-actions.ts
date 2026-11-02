@@ -33,14 +33,13 @@ function toBps(raw: string): number | null {
 
 export async function updateSettings(_prev: State, formData: FormData): Promise<State> {
   const commission = toBps(field(formData, "commission"));
-  const rider = toBps(field(formData, "rider"));
   const limit = Number(field(formData, "limit"));
-  if (commission === null || rider === null || !Number.isInteger(limit)) return { error: MESSAGES.bad_settings };
+  if (commission === null || !Number.isInteger(limit)) return { error: MESSAGES.bad_settings };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_update_settings", {
     p_commission_bps: commission,
-    p_rider_bps: rider,
+    p_rider_bps: 10000, // riders keep the whole delivery fee
     p_limit: limit,
   });
   if (error) return { error: explain(error.message) };

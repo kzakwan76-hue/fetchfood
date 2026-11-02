@@ -50,7 +50,6 @@ async function Money() {
           <p className="mb-2 text-neutral-600">Changes apply only to orders delivered from now on.</p>
           <SettingsForm
             commissionPct={settings.c_commission_bps / 100}
-            riderPct={settings.c_rider_bps / 100}
             limit={settings.c_limit}
           />
         </section>
