@@ -576,3 +576,23 @@ Route (app)                          Revalidate  Expire
 - ID photos are viewed by an admin; there is no automatic ID verification, and the security deposit is only recorded, not held in any system.
 - CNIC data is personal data: it needs a privacy policy and careful access, and deleting an account deletes its rider profile (cascade).
 - Notifications are never deleted, and the bell polls every 30 seconds (no realtime).
+
+
+## Milestone 16: dispatch safety and rider cash
+**Built:** 0018_dispatch_cash.sql (pickup code and owner handover, owner_order_riders, on-duty switch and ordering block per zone, stuck-order sweep with pg_cron and a throttled run_sweep, bonus, cancel_reason, rider_payouts and rider_credits, rider_owed, new rider and admin functions, richer orders_notify); rider page with duty switch, code and bonus; owner handover card; admin Overview (needs attention, stale cash), Money (dispatch rules, rider payouts, incentives); scripts\test-duty.mjs.
+
+**Decisions**
+- Riders hand in ALL the cash; FetchFood pays their delivery fees, bonuses and incentives afterwards, and only when they hold no cash.
+- Cash limit counts cash held plus orders on the road; a rider carrying nothing can always take one large order. Default stays Rs. 5,000 (editable, and per rider).
+- The pickup code is generated in the database, hidden from owners and customers by column grants, shown only to the rider; the owner types it. Five wrong tries lock the order. The customer's address is hidden from the rider until the handover.
+- The on-duty rule is a switch (default off so existing tests pass); turn it on before launch.
+- Stuck orders: unaccepted 15 min -> cancelled; ready 5 min -> bonus and re-alert; 10 min -> admin alert; cancel after a setting (15 to 120, default 20); a claimed order not collected in 15 min goes back to the pool.
+- Deposit default Rs. 500 in the approval form (recorded only).
+
+**Results:** test-duty, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-8: [write what you saw]
+
+**Limitations**
+- Deposits are recorded, not held by any system. A rider who disappears still costs us up to their cash limit minus the deposit.
+- Auto-cancel wastes food the restaurant already cooked; no compensation is built.
+- The minute-by-minute checks rely on pg_cron (or open pages).
+- No referral programme, no per-restaurant own-riders, no scheduled settlements, no SMS or WhatsApp alerts, no rider agreement yet.
