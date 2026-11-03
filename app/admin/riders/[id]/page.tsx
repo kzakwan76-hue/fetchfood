@@ -59,6 +59,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           {r && <Line label="On the road now" value={r.r_active} />}
           {k && <Line label="Total earned (delivery fees)" value={formatPKR(k.k_earned)} />}
           {r && <Line label="Cash held (to deposit)" value={formatPKR(r.r_held)} bold />}
+          {r && <Line label="We owe them (fees, bonuses, incentives)" value={formatPKR(r.r_owed)} />}
           {k && <Line label="Security deposit received" value={formatPKR(k.k_deposit)} />}
           {k && <Line label="Cash limit" value={k.k_limit === null ? "default" : formatPKR(k.k_limit)} />}
         </dl>

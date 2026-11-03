@@ -28,6 +28,7 @@ export function OrderActions({
 }) {
   const [state, formAction, pending] = useActionState(changeOrderStatus, {});
 
+  if (hasRider && status === "preparing") return null; // the dashboard shows the rider card and the code form
   if (status === "out_for_delivery" || hasRider) {
     return <p className="mt-3 text-sm text-neutral-600">With the rider. They will mark it delivered.</p>;
   }

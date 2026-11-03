@@ -102,3 +102,16 @@ export async function loadReorder(orderId: string): Promise<ReorderResult> {
     skipped,
   };
 }
+
+
+// Zones where ordering is open right now (null = could not tell, so assume open).
+export async function openZoneIds(): Promise<string[] | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("zones_open_for_orders");
+    if (error || !Array.isArray(data)) return null;
+    return data as string[];
+  } catch {
+    return null;
+  }
+}

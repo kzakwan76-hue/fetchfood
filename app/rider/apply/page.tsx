@@ -12,7 +12,7 @@ export default function ApplyPage() {
   return (
     <main className="mx-auto max-w-md px-4 py-4 pb-24">
       <h1 className="text-3xl font-extrabold tracking-tight text-charcoal-900">Ride with FetchFood</h1>
-      <p className="mt-1 text-charcoal-700">Riders keep the whole delivery fee. We verify every rider before their first order.</p>
+      <p className="mt-1 text-charcoal-700">Riders keep the whole delivery fee. You hand in all the cash you collect, and we pay your earnings. A refundable security deposit of Rs. 500 is collected when you are approved. We verify every rider before their first order.</p>
       <Suspense fallback={<ListSkeleton rows={2} height="h-40" />}>
         <Apply />
       </Suspense>

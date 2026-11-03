@@ -30,7 +30,7 @@ export function RiderReviewForm({
             </select>
           </label>
           <label className="block font-medium">Security deposit received (Rs.)
-            <input name="deposit" type="number" min={0} max={1000000} defaultValue={deposit} className={input} />
+            <input name="deposit" type="number" min={0} max={1000000} defaultValue={deposit > 0 ? deposit : 500} className={input} />
           </label>
           <label className="block font-medium">Personal cash limit (Rs.). Empty = the default limit.
             <input name="limit" type="number" min={0} max={1000000} defaultValue={limit ?? ""} className={input} />

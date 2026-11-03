@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { createClient } from "../../lib/supabase/server";
 import { formatPKR } from "../../lib/pk";
 import { ACTIVE_STATUSES, STATUS_LABEL, formatOrderTime } from "../../lib/order-status";
+import { HandoverForm } from "../../components/handover-form";
 import { OrderActions } from "../../components/order-actions";
 import { RefreshButton } from "../../components/refresh-button";
 import { RestaurantOpenToggle } from "../../components/restaurant-open-toggle";
@@ -22,6 +23,7 @@ type OrderRow = {
   restaurants: { name: string } | null;
   order_items: { item_name: string; quantity: number }[];
 };
+type RiderInfo = { v_order: string; v_name: string; v_vehicle: string | null; v_reg: string | null; v_phone: string | null };
 
 export default function DashboardPage() {
   return (
@@ -70,6 +72,11 @@ async function DashboardContent() {
   const active = orders.filter((o) => ACTIVE_STATUSES.includes(o.status)).reverse(); // oldest first
   const finished = orders.filter((o) => !ACTIVE_STATUSES.includes(o.status)).slice(0, 10);
 
+  // Which rider is coming for which order (name, vehicle, phone). The pickup code is NOT shown here:
+  // the rider shows it, and you type it in.
+  const { data: riderData } = await supabase.rpc("owner_order_riders");
+  const riders = new Map(((riderData ?? []) as RiderInfo[]).map((r) => [r.v_order, r]));
+
   return (
     <div className="mt-4 space-y-6">
       <div className="space-y-3">
@@ -87,42 +94,52 @@ async function DashboardContent() {
           <p className="mt-2 text-sm text-neutral-600">No active orders right now.</p>
         ) : (
           <ul className="mt-2 space-y-3">
-            {active.map((o) => (
-              <li key={o.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-semibold text-neutral-900">
-                    #{o.id.slice(0, 8)} · {formatOrderTime(o.created_at)}
+            {active.map((o) => {
+              const rider = riders.get(o.id);
+              return (
+                <li key={o.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold text-neutral-900">
+                      #{o.id.slice(0, 8)} · {formatOrderTime(o.created_at)}
+                    </p>
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
+                      {STATUS_LABEL[o.status] ?? o.status}
+                    </span>
+                  </div>
+                  {restaurants.length > 1 && <p className="text-sm text-neutral-600">{o.restaurants?.name}</p>}
+                  <ul className="mt-2 text-sm text-neutral-800">
+                    {o.order_items.map((i) => (
+                      <li key={i.item_name}>
+                        {i.quantity} × {i.item_name}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-sm text-neutral-700">{o.delivery_address}</p>
+                  <p className="text-sm text-neutral-700">
+                    <a href={`tel:${o.phone}`} className="font-semibold text-brand-600">
+                      {o.phone}
+                    </a>
                   </p>
-                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
-                    {STATUS_LABEL[o.status] ?? o.status}
-                  </span>
-                </div>
-                {restaurants.length > 1 && (
-                  <p className="text-sm text-neutral-600">{o.restaurants?.name}</p>
-                )}
-                <ul className="mt-2 text-sm text-neutral-800">
-                  {o.order_items.map((i) => (
-                    <li key={i.item_name}>
-                      {i.quantity} × {i.item_name}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2 text-sm text-neutral-700">{o.delivery_address}</p>
-                <p className="text-sm text-neutral-700">
-                  <a href={`tel:${o.phone}`} className="font-semibold text-brand-600">
-                    {o.phone}
-                  </a>
-                </p>
-                {o.note && <p className="text-sm text-neutral-700">Note: {o.note}</p>}
-                <p className="mt-1 text-sm font-semibold text-neutral-900">Cash to collect: {formatPKR(o.total_pkr)}</p>
-                <OrderActions
-                  orderId={o.id}
-                  status={o.status}
-                  hasRider={o.rider_id !== null}
-                  ready={o.ready_at !== null}
-                />
-              </li>
-            ))}
+                  {o.note && <p className="text-sm text-neutral-700">Note: {o.note}</p>}
+                  <p className="mt-1 text-sm font-semibold text-neutral-900">Cash to collect: {formatPKR(o.total_pkr)}</p>
+                  {o.status === "preparing" && o.rider_id && rider && (
+                    <HandoverForm
+                      orderId={o.id}
+                      name={rider.v_name}
+                      vehicle={rider.v_vehicle}
+                      reg={rider.v_reg}
+                      phone={rider.v_phone}
+                    />
+                  )}
+                  <OrderActions
+                    orderId={o.id}
+                    status={o.status}
+                    hasRider={o.rider_id !== null}
+                    ready={o.ready_at !== null}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

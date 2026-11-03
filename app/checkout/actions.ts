@@ -13,6 +13,7 @@ const MESSAGES: Record<string, string> = {
   below_minimum: "Your cart is below this restaurant's minimum order.",
   restaurant_unavailable: "This restaurant is closed or unavailable right now.",
   wrong_zone: "This restaurant doesn't deliver to your chosen area. Change your area or pick another restaurant.",
+  no_riders: "No riders are on duty in your area right now, so we can't take orders. Please try again soon.",
   invalid_items: "An item in your cart is no longer available. Please review your cart.",
   bad_items: "Your cart is empty.",
   address_too_short: "Please enter your full delivery address.",

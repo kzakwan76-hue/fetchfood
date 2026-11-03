@@ -32,3 +32,10 @@
 ## 4. Smoke test after every deploy
 Sign up (confirm the email), choose an area, order, accept as the restaurant, claim as a rider, deliver, review, and ask Moka.
 Check that /admin shows "not found" for a normal customer.
+
+
+## 5. Dispatch and cash (migration 0018)
+1. Run migrations 0001 to 0018. 0018 tries to schedule a once-a-minute stuck-order check with pg_cron. In Supabase open Database > Extensions and check that pg_cron is enabled. If it is not, enable it and run this once in the SQL Editor: select cron.schedule('fetchfood-sweep', '* * * * *', 'select public.sweep_stuck_orders()');
+2. At /admin/money tick "Only take orders in a zone while a rider is on duty there" and save. It is OFF by default.
+3. Set the default rider cash limit, the unclaimed-order bonus and the cancel time (15 minutes or more). Raise a rider's personal cash limit only after a clean record.
+4. Pay restaurants on a fixed schedule (weekly or twice a week) and tell them in the restaurant agreement. Riders hand in all cash daily.

@@ -6,6 +6,7 @@ import { createClient } from "../../lib/supabase/server";
 export async function unreadCount(): Promise<number> {
   try {
     const supabase = await createClient();
+    await supabase.rpc("run_sweep"); // does real work at most once every 30 seconds
     const { data } = await supabase.rpc("my_unread_notifications");
     return typeof data === "number" ? data : 0;
   } catch {

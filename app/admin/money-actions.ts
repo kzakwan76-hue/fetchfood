@@ -16,6 +16,9 @@ const MESSAGES: Record<string, string> = {
   exceeds_balance: "That is more than the current balance.",
   not_a_rider: "That account is not a rider.",
   bad_note: "The note can be at most 200 characters.",
+  deposit_first: "This rider still holds cash. Record their deposit first, then pay them.",
+  order_not_found: "Order not found.",
+  invalid_transition: "That order can't be cancelled any more.",
 };
 
 function explain(message: string): string {
@@ -93,4 +96,71 @@ export async function recordDeposit(_prev: State, formData: FormData): Promise<S
   revalidatePath("/admin/money");
   revalidatePath("/rider");
   return { ok: "Deposit recorded." };
+}
+
+
+export async function updateRules(_prev: State, formData: FormData): Promise<State> {
+  const requireDuty = field(formData, "requireDuty") === "on";
+  const bonus = Number(field(formData, "bonus"));
+  const cancel = Number(field(formData, "cancel"));
+  if (!Number.isInteger(bonus) || !Number.isInteger(cancel)) return { error: "Bonus and minutes must be whole numbers." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_update_rules", {
+    p_require_duty: requireDuty,
+    p_bonus: bonus,
+    p_cancel: cancel,
+  });
+  if (error) return { error: explain(error.message) };
+  revalidatePath("/admin/money");
+  revalidatePath("/admin/overview");
+  return { ok: "Saved." };
+}
+
+export async function recordRiderPayout(_prev: State, formData: FormData): Promise<State> {
+  const riderId = field(formData, "riderId");
+  const amount = Number(field(formData, "amount"));
+  if (!UUID.test(riderId) || !Number.isInteger(amount)) return { error: MESSAGES.bad_amount };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_record_rider_payout", {
+    p_rider: riderId,
+    p_amount: amount,
+    p_note: field(formData, "note") || null,
+  });
+  if (error) return { error: explain(error.message) };
+  revalidatePath("/admin/money");
+  revalidatePath("/rider");
+  return { ok: "Rider payout recorded." };
+}
+
+export async function addCredit(_prev: State, formData: FormData): Promise<State> {
+  const riderId = field(formData, "riderId");
+  const amount = Number(field(formData, "amount"));
+  const note = field(formData, "note");
+  if (!UUID.test(riderId) || !Number.isInteger(amount)) return { error: MESSAGES.bad_amount };
+  if (note.length < 3) return { error: "Write why (3 to 200 characters), for example 'first-month guarantee'." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_add_credit", { p_rider: riderId, p_amount: amount, p_note: note });
+  if (error) return { error: explain(error.message) };
+  revalidatePath("/admin/money");
+  revalidatePath("/rider");
+  return { ok: "Incentive added to what you owe this rider." };
+}
+
+export async function cancelOrderAdmin(_prev: State, formData: FormData): Promise<State> {
+  const orderId = field(formData, "orderId");
+  if (!UUID.test(orderId)) return { error: "Invalid request." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_cancel_order", {
+    p_order_id: orderId,
+    p_reason: field(formData, "reason") || null,
+  });
+  if (error) return { error: explain(error.message) };
+  revalidatePath("/admin/overview");
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { ok: "Order cancelled. The customer and restaurant were told." };
 }

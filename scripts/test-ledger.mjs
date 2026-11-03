@@ -62,6 +62,7 @@ const rider = createClient(url, key, opts);
 const admin = createClient(url, key, opts);
 const riderId = await login(rider, RIDER_EMAIL, RIDER_PASSWORD, "rider");
 await login(admin, ADMIN_EMAIL, ADMIN_PASSWORD, "admin");
+assert.ifError((await rider.rpc("rider_set_duty", { p_on: true })).error);
 
 const { data: karahi, error: kErr } = await anon
   .from("restaurants")
@@ -113,6 +114,8 @@ const claim = await rider.rpc("rider_claim_order", { p_order_id: orderId });
 assert.ifError(claim.error);
 assert.equal((await status("delivered")).error?.message, "invalid_transition");
 assert.equal((await owner.rpc("owner_mark_ready", { p_order_id: orderId })).error?.message, "invalid_transition");
+const myOrder = (await rider.rpc("rider_my_orders")).data.find((o) => o.o_id === orderId);
+assert.equal((await owner.rpc("owner_handover", { p_order_id: orderId, p_code: myOrder.o_code })).data, "ok");
 assert.ifError((await rider.rpc("rider_mark_delivered", { p_order_id: orderId })).error);
 
 // The breakdown must match the rules exactly.
@@ -131,7 +134,7 @@ assert.equal(d.d_rider_id, riderId);
 const after = (await admin.rpc("admin_restaurants", { p_id: karahi.id })).data[0];
 assert.equal(after.s_owed - before.s_owed, d.d_rest_share);
 wallet = (await rider.rpc("rider_wallet")).data[0];
-assert.equal(wallet.w_held, d.d_total - riderPay);
+assert.equal(wallet.w_held, d.d_total); // riders now hand in ALL the cash
 
 // Settlements: cannot overpay, cannot take zero, exact amounts work and clear the balance.
 const owed = after.s_owed;

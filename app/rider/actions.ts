@@ -19,6 +19,8 @@ const MESSAGES: Record<string, string> = {
   order_not_found: "Order not found.",
   not_available: "Someone else already took this order.",
   kyc_required: "Your rider profile isn't approved yet.",
+  off_duty: "Go on duty first.",
+  wrong_code: "That code doesn't match.",
   cash_limit: "You are holding too much cash. Hand it in to FetchFood, then take new orders.",
   wrong_zone: "This order is outside your zone.",                      
   too_many: "You already have 3 active deliveries. Finish one first.",

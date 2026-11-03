@@ -8,7 +8,7 @@ export const metadata = { title: "Riders" };
 
 export type RiderRow = {
   r_id: string; r_email: string; r_name: string | null; r_phone: string | null; r_zone: string | null;
-  r_delivered: number; r_active: number; r_held: number;
+  r_delivered: number; r_active: number; r_held: number; r_owed: number;
 };
 
 export default function AdminRidersPage() {
@@ -45,7 +45,7 @@ async function Riders() {
                 <p className="text-neutral-700">{r.r_email} · {r.r_phone ?? "no phone"}</p>
                 <p className="text-neutral-700">Zone: {r.r_zone ?? "none (sees no orders)"}</p>
                 <p className="mt-1 text-neutral-800">
-                  {r.r_delivered} delivered · {r.r_active} on the road · holds <strong>{formatPKR(r.r_held)}</strong>
+                  {r.r_delivered} delivered · {r.r_active} on the road · holds <strong>{formatPKR(r.r_held)}</strong> · we owe {formatPKR(r.r_owed)}
                 </p>
               </Link>
             </li>

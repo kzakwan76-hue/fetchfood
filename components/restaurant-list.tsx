@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Restaurant } from "../lib/catalog";
 import { formatPKR } from "../lib/pk";
 import { useHydrated, useZone } from "../lib/zone-store";
+import { openZoneIds } from "../app/customer/actions";
 import { RatingBadge } from "./rating-badge";
 import { RestaurantBanner } from "./restaurant-banner";
 import { ListSkeleton } from "./skeleton";
@@ -24,6 +25,21 @@ export function RestaurantList({
   const [query, setQuery] = useState("");
   const [cuisineChoice, setCuisineChoice] = useState<string | null>(null);
   const [openOnly, setOpenOnly] = useState(false);
+    const [openZones, setOpenZones] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const ids = await openZoneIds();
+      if (alive) setOpenZones(ids);
+    };
+    void load();
+    const id = setInterval(load, 60000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   const zone = zones.find((z) => z.id === chosen?.id) ?? null;
   const inZone = zone ? restaurants.filter((r) => r.zoneId === zone.id) : [];
@@ -52,6 +68,11 @@ export function RestaurantList({
       </div>
 
       {!hydrated && <ListSkeleton rows={2} height="h-52" />}
+      {hydrated && zone && openZones !== null && !openZones.includes(zone.id) && (
+        <p role="status" className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+          🛵 No riders are on duty in {zone.name} right now, so ordering is paused. You can still browse. Check back soon.
+        </p>
+      )}
 
       {hydrated && !zone && (
         <p className="mt-6 text-center text-sm text-charcoal-700">
