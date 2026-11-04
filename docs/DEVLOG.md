@@ -596,3 +596,20 @@ Route (app)                          Revalidate  Expire
 - Auto-cancel wastes food the restaurant already cooked; no compensation is built.
 - The minute-by-minute checks rely on pg_cron (or open pages).
 - No referral programme, no per-restaurant own-riders, no scheduled settlements, no SMS or WhatsApp alerts, no rider agreement yet.
+
+
+## Milestone 17: map pin and navigation
+**Built:** 0019_map_pin.sql (orders.delivery_lat/lng and saved_addresses.lat/lng with Pakistan bounding-box checks, set_order_location, rider_order_location, admin_order_location, save_address with a pin); components\location-picker.tsx (Leaflet with OpenStreetMap tiles, current-location button, draggable pin); pin in the checkout form and action; components\rider-navigate.tsx (Google Maps directions link); pin link on the admin order page; scripts\test-location.mjs.
+
+**Decisions**
+- The pin is optional and saved after the order by a separate function, so place_order and its idempotency are untouched and a failed pin never blocks an order.
+- Coordinates are not in any column grant. The rider gets them only for their own order while it is out for delivery (after the code handover), admin on the order page, and the customer can move the pin only until the order is on the road.
+- Navigation is a plain Google Maps link (no key). Map pictures use OpenStreetMap tiles; Leaflet's stylesheet loads from unpkg.
+- Live tracking was deliberately left out.
+
+**Results:** test-location, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-7: [write what you saw]
+
+**Limitations**
+- OpenStreetMap's public tile server is for light use only (policy to verify before launch); no address search or geocoding yet.
+- No live rider tracking, and the customer's order page does not show the pin.
+- Phone GPS can be inaccurate indoors; the restaurant owner does not see the pin.
