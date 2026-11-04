@@ -24,6 +24,18 @@ function text(formData: FormData, name: string): string {
   return String(formData.get(name) ?? "").trim();
 }
 
+// The map pin is optional. Anything missing or outside Pakistan is ignored (the database checks again).
+function readPin(formData: FormData): { lat: number; lng: number } | null {
+  const rawLat = text(formData, "lat");
+  const rawLng = text(formData, "lng");
+  if (rawLat === "" || rawLng === "") return null;
+  const lat = Number(rawLat);
+  const lng = Number(rawLng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < 23.5 || lat > 37.5 || lng < 60.8 || lng > 77.9) return null;
+  return { lat, lng };
+}
+
 export async function placeOrder(_prev: State, formData: FormData): Promise<State> {
   const values = { address: text(formData, "address"), phone: text(formData, "phone"), note: text(formData, "note") };
   const fail = (error: string): State => ({ error, values });
@@ -77,11 +89,17 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     return fail(MESSAGES[error.message] ?? "Could not place your order. Please try again.");
   }
 
-  // Saving the address is a convenience: if it fails, the order is still placed.
+  // The pin and the saved address are conveniences: if either fails, the order is still placed.
+  const pin = readPin(formData);
+  if (pin) {
+    await supabase.rpc("set_order_location", { p_order_id: data, p_lat: pin.lat, p_lng: pin.lng });
+  }
   if (text(formData, "saveAddress") === "on") {
     await supabase.rpc("save_address", {
       p_label: text(formData, "saveLabel").slice(0, 30) || "Saved",
       p_address: values.address,
+      p_lat: pin?.lat ?? null,
+      p_lng: pin?.lng ?? null,
     });
   }
   redirect(`/orders/${data}?placed=1`);

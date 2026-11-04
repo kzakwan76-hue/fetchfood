@@ -35,14 +35,14 @@ async function CheckoutGate() {
     .single();
   const { data: saved } = await supabase
     .from("saved_addresses")
-    .select("id, label, address")
+    .select("id, label, address, lat, lng")
     .order("created_at", { ascending: false })
     .limit(5);
 
   return (
     <CheckoutForm
       defaultPhone={profile?.phone ?? ""}
-      addresses={(saved ?? []) as { id: string; label: string; address: string }[]}
+      addresses={(saved ?? []) as { id: string; label: string; address: string; lat: number | null; lng: number | null }[]}
     />
   );
 }

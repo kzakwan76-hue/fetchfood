@@ -9,6 +9,7 @@ import { RefreshButton } from "../../components/refresh-button";
 import { RiderButton } from "../../components/rider-button";
 import { RiderCall } from "../../components/rider-call";
 import { RiderDuty } from "../../components/rider-duty";
+import { RiderNavigate } from "../../components/rider-navigate";
 import { RiderWallet } from "../../components/rider-wallet";
 import { ListSkeleton } from "../../components/skeleton";
 
@@ -143,6 +144,7 @@ async function RiderContent() {
                 {o.o_note && <p className="text-neutral-700">Note: {o.o_note}</p>}
                 <p className="mt-1 font-semibold text-neutral-900">Cash to collect: {formatPKR(o.o_total)}</p>
                 <RiderCall orderId={o.o_id} phone={o.o_phone ?? ""} calledAt={o.o_called} />
+                <RiderNavigate orderId={o.o_id} />
                 <RiderButton orderId={o.o_id} intent="deliver" label="Mark delivered" />
               </li>
             ))}

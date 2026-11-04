@@ -7,11 +7,12 @@ import { subtotalPkr, totalPkr } from "../lib/cart";
 import { useCart } from "../lib/cart-store";
 import { formatPKR } from "../lib/pk";
 import { useZone } from "../lib/zone-store";
+import { LocationPicker, type Pin } from "./location-picker";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 focus:border-brand-500 focus:outline-none";
 
-type SavedAddress = { id: string; label: string; address: string };
+type SavedAddress = { id: string; label: string; address: string; lat: number | null; lng: number | null };
 
 export function CheckoutForm({
   defaultPhone,
@@ -24,6 +25,7 @@ export function CheckoutForm({
   const zone = useZone();
   const [state, formAction, pending] = useActionState(placeOrder, {});
   const [address, setAddress] = useState("");
+  const [pin, setPin] = useState<Pin | null>(null);
   // Same key for every submit from this page, so a double tap or retry cannot create two orders.
   const [idem] = useState(() => crypto.randomUUID());
 
@@ -63,6 +65,8 @@ export function CheckoutForm({
       <input type="hidden" name="cart" value={payload} />
       <input type="hidden" name="zoneId" value={zone.id} />
       <input type="hidden" name="idem" value={idem} />
+      <input type="hidden" name="lat" value={pin ? String(pin.lat) : ""} />
+      <input type="hidden" name="lng" value={pin ? String(pin.lng) : ""} />
 
       <p className="text-sm text-neutral-600">
         {cart.restaurantName} · {formatPKR(subtotalPkr(cart))} + {formatPKR(cart.deliveryFeePkr)} delivery
@@ -82,10 +86,14 @@ export function CheckoutForm({
               <button
                 key={a.id}
                 type="button"
-                onClick={() => setAddress(a.address)}
+                onClick={() => {
+                  setAddress(a.address);
+                  if (a.lat !== null && a.lng !== null) setPin({ lat: a.lat, lng: a.lng });
+                }}
                 className="rounded-full border border-brand-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-charcoal-900 hover:bg-brand-100"
               >
                 {a.label}
+                {a.lat !== null ? " 📍" : ""}
               </button>
             ))}
           </div>
@@ -106,11 +114,19 @@ export function CheckoutForm({
         />
       </label>
 
+      <div>
+        <p className="text-sm font-medium text-neutral-800">Drop a pin (optional, helps your rider find you)</p>
+        <p className="mb-2 text-xs text-neutral-600">
+          Your rider sees the pin only after the restaurant hands over your food.
+        </p>
+        <LocationPicker value={pin} onChange={setPin} />
+      </div>
+
       {canSave && (
         <div className="rounded-xl bg-brand-50 p-3 text-sm">
           <label className="flex items-center gap-2 font-medium text-neutral-800">
             <input type="checkbox" name="saveAddress" />
-            Save this address for next time
+            Save this address{pin ? " and pin" : ""} for next time
           </label>
           <input
             name="saveLabel"

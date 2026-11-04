@@ -39,3 +39,10 @@ Check that /admin shows "not found" for a normal customer.
 2. At /admin/money tick "Only take orders in a zone while a rider is on duty there" and save. It is OFF by default.
 3. Set the default rider cash limit, the unclaimed-order bonus and the cancel time (15 minutes or more). Raise a rider's personal cash limit only after a clean record.
 4. Pay restaurants on a fixed schedule (weekly or twice a week) and tell them in the restaurant agreement. Riders hand in all cash daily.
+
+
+## 6. Map pin (migration 0019)
+1. Run migrations 0001 to 0019.
+2. Map pictures come from OpenStreetMap's public tile server. Before launch read their current tile usage policy: it is for light use and requires the "© OpenStreetMap contributors" credit (already shown). If traffic grows, switch the tile URL in components\location-picker.tsx to a paid or free-tier tile provider.
+3. Location access (the "use my current location" button) only works on HTTPS, which Vercel provides. It also works on localhost.
+4. Leaflet's stylesheet is loaded from unpkg at runtime. If you want zero third-party requests, copy it into the project later.

@@ -33,6 +33,8 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   const d = ((data ?? []) as D[])[0];
   if (!d) notFound();
   const { data: called } = await supabase.rpc("admin_order_call", { p_id: id });
+  const { data: locData } = await supabase.rpc("admin_order_location", { p_id: id });
+  const loc = ((locData ?? []) as { l_lat: number | null; l_lng: number | null }[])[0];
 
   return (
     <div className="mt-4 space-y-4">
@@ -70,6 +72,20 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         <p className="mt-1">{d.d_customer}{d.d_customer_email ? ` · ${d.d_customer_email}` : ""}</p>
         <p>{d.d_phone}</p>
         <p className="mt-1">{d.d_address}</p>
+        {loc?.l_lat != null && loc?.l_lng != null ? (
+          <p className="mt-1">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${loc.l_lat},${loc.l_lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-700 underline"
+            >
+              📍 Open the customer&apos;s pin
+            </a>
+          </p>
+        ) : (
+          <p className="mt-1 text-neutral-600">No map pin dropped.</p>
+        )}
         {d.d_note && <p className="mt-1 text-neutral-700">Note: {d.d_note}</p>}
         <p className="mt-2 font-semibold text-charcoal-900">Items</p>
         <p>{d.d_items ?? "none"}</p>
