@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { placeOrder } from "../app/checkout/actions";
-import { subtotalPkr, totalPkr } from "../lib/cart";
+import { quoteDelivery, type Quote } from "../app/checkout/quote-actions";
+import { subtotalPkr } from "../lib/cart";
 import { useCart } from "../lib/cart-store";
 import { formatPKR } from "../lib/pk";
 import { useZone } from "../lib/zone-store";
@@ -13,6 +14,7 @@ const inputClass =
   "mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 focus:border-brand-500 focus:outline-none";
 
 type SavedAddress = { id: string; label: string; address: string; lat: number | null; lng: number | null };
+type KeyedQuote = Quote & { key: string };
 
 export function CheckoutForm({
   defaultPhone,
@@ -26,8 +28,28 @@ export function CheckoutForm({
   const [state, formAction, pending] = useActionState(placeOrder, {});
   const [address, setAddress] = useState("");
   const [pin, setPin] = useState<Pin | null>(null);
+  const [quote, setQuote] = useState<KeyedQuote | null>(null);
   // Same key for every submit from this page, so a double tap or retry cannot create two orders.
   const [idem] = useState(() => crypto.randomUUID());
+
+  const restaurantId = cart.restaurantId;
+  const lat = pin?.lat ?? null;
+  const lng = pin?.lng ?? null;
+  const key = `${restaurantId ?? ""}|${lat ?? ""}|${lng ?? ""}`;
+
+  // Ask the server for the delivery fee whenever the pin moves (after a short pause).
+  useEffect(() => {
+    if (!restaurantId) return;
+    let alive = true;
+    const timer = setTimeout(async () => {
+      const result = await quoteDelivery(restaurantId, lat, lng);
+      if (alive && result) setQuote({ ...result, key: `${restaurantId}|${lat ?? ""}|${lng ?? ""}` });
+    }, 350);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [restaurantId, lat, lng]);
 
   if (cart.lines.length === 0) {
     return (
@@ -51,6 +73,12 @@ export function CheckoutForm({
     );
   }
 
+  const current = quote && quote.key === key ? quote : null;
+  const priced = current && (current.status === "ok" || current.status === "flat") && current.fee !== null;
+  const fee = priced && current?.fee != null ? current.fee : cart.deliveryFeePkr;
+  const total = subtotalPkr(cart) + fee;
+  const blocked = current?.status === "no_pin" || current?.status === "too_far";
+
   const known = addresses.some((a) => a.address.trim().toLowerCase() === address.trim().toLowerCase());
   const canSave = !known && addresses.length < 5 && address.trim().length >= 10;
 
@@ -69,7 +97,7 @@ export function CheckoutForm({
       <input type="hidden" name="lng" value={pin ? String(pin.lng) : ""} />
 
       <p className="text-sm text-neutral-600">
-        {cart.restaurantName} · {formatPKR(subtotalPkr(cart))} + {formatPKR(cart.deliveryFeePkr)} delivery
+        {cart.restaurantName} · {formatPKR(subtotalPkr(cart))} + {priced ? formatPKR(fee) : "…"} delivery
       </p>
       <p className="text-sm text-neutral-700">
         Delivering to: <strong>{zone.name}</strong>{" "}
@@ -115,12 +143,29 @@ export function CheckoutForm({
       </label>
 
       <div>
-        <p className="text-sm font-medium text-neutral-800">Drop a pin (optional, helps your rider find you)</p>
+        <p className="text-sm font-medium text-neutral-800">Drop a pin (helps your rider, and sets your delivery fee)</p>
         <p className="mb-2 text-xs text-neutral-600">
           Your rider sees the pin only after the restaurant hands over your food.
         </p>
         <LocationPicker value={pin} onChange={setPin} />
       </div>
+
+      {current?.status === "ok" && current.km !== null && (
+        <p role="status" className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-900">
+          About <strong>{current.km} km</strong> away (straight line) · Delivery <strong>{formatPKR(fee)}</strong>
+        </p>
+      )}
+      {current?.status === "no_pin" && (
+        <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          This restaurant prices delivery by distance. Drop a pin to see your delivery fee.
+        </p>
+      )}
+      {current?.status === "too_far" && (
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+          Too far: you&apos;re about {current.km} km away and this restaurant delivers up to {current.max} km. Try another
+          restaurant or move the pin.
+        </p>
+      )}
 
       {canSave && (
         <div className="rounded-xl bg-brand-50 p-3 text-sm">
@@ -154,8 +199,8 @@ export function CheckoutForm({
       </label>
 
       <p className="rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-700">
-        Payment: <strong>cash on delivery</strong>. You pay the rider about{" "}
-        <strong>{formatPKR(totalPkr(cart))}</strong>. The final total is calculated by our server.
+        Payment: <strong>cash on delivery</strong>. You pay the rider about <strong>{formatPKR(total)}</strong>. The
+        final total is calculated by our server.
       </p>
 
       {state.error && (
@@ -166,7 +211,7 @@ export function CheckoutForm({
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || blocked}
         className="w-full rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white hover:bg-brand-500 disabled:opacity-60"
       >
         {pending ? "Placing order…" : "Place order"}

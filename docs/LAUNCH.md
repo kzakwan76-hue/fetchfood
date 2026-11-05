@@ -46,3 +46,9 @@ Check that /admin shows "not found" for a normal customer.
 2. Map pictures come from OpenStreetMap's public tile server. Before launch read their current tile usage policy: it is for light use and requires the "© OpenStreetMap contributors" credit (already shown). If traffic grows, switch the tile URL in components\location-picker.tsx to a paid or free-tier tile provider.
 3. Location access (the "use my current location" button) only works on HTTPS, which Vercel provides. It also works on localhost.
 4. Leaflet's stylesheet is loaded from unpkg at runtime. If you want zero third-party requests, copy it into the project later.
+
+
+## 7. Distance-based delivery fees (migration 0020)
+1. Run migrations 0001 to 0020.
+2. In /admin/delivery set the fee tiers and the maximum delivery distance, then open each restaurant (/admin/restaurants/<id>) and drop its pin on the map. A restaurant without a pin keeps its flat fee; with a pin, customers must drop a pin to order.
+3. Distance is a straight line, a little shorter than the road. Choose the tiers with that in mind.

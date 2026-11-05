@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { AdminPage, Line, OrderRows, card, type OrderRow } from "../../../../components/admin-ui";
+import { RestaurantLocationForm } from "../../../../components/delivery-forms";
 import { CommissionForm } from "../../../../components/money-forms";
 import { requireAdmin } from "../../../../lib/admin";
 import { formatPKR } from "../../../../lib/pk";
@@ -23,6 +24,8 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   const r = ((data ?? []) as RestRow[])[0];
   if (!r) notFound();
   const { data: orders } = await supabase.rpc("admin_orders", { p_restaurant: id, p_limit: 50 });
+  const { data: locData } = await supabase.rpc("admin_restaurant_locations");
+  const loc = ((locData ?? []) as { l_id: string; l_lat: number | null; l_lng: number | null }[]).find((x) => x.l_id === id);
 
   return (
     <div className="mt-4 space-y-4">
@@ -43,6 +46,14 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       <div className={card}>
         <p className="font-bold text-charcoal-900">Commission rate</p>
         <CommissionForm restaurantId={r.s_id} customPct={r.s_custom ? r.s_bps / 100 : null} currentPct={r.s_bps / 100} />
+      </div>
+      <div className={card}>
+        <p className="font-bold text-charcoal-900">Location (for distance-based delivery fees)</p>
+        <p className="text-neutral-600">
+          With a location set, customers must drop a pin and the fee depends on distance. Without one, the
+          restaurant&apos;s flat fee is used.
+        </p>
+        <RestaurantLocationForm restaurantId={r.s_id} lat={loc?.l_lat ?? null} lng={loc?.l_lng ?? null} />
       </div>
       <h2 className="text-lg font-bold text-charcoal-900">Their orders</h2>
       <OrderRows rows={(orders ?? []) as OrderRow[]} />

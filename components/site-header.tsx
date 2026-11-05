@@ -7,8 +7,12 @@ import { itemCount } from "../lib/cart";
 import { useCart } from "../lib/cart-store";
 import { useHydrated, useZone } from "../lib/zone-store";
 
-// The chat, login and signup screens have their own full-screen layout.
+// The chat, login and signup screens have their own full-screen layout; the admin console has its own header.
 const HIDDEN = ["/assistant", "/login", "/signup"];
+
+const shell = "sticky top-0 z-30 bg-linear-to-b from-brand-50 via-brand-50/90 to-transparent px-3 pb-2 pt-2";
+const bar =
+  "mx-auto flex h-12 max-w-3xl items-center justify-between gap-2 rounded-2xl border border-brand-200 bg-white/95 px-3 shadow-card backdrop-blur";
 
 function Logo() {
   return (
@@ -21,8 +25,8 @@ function Logo() {
 // Shown while the header is loading: just the logo, same height, so nothing jumps.
 export function HeaderFallback() {
   return (
-    <header className="sticky top-0 z-30 border-b border-brand-100 bg-brand-50/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-3xl items-center px-4">
+    <header className={shell}>
+      <div className={bar}>
         <Logo />
       </div>
     </header>
@@ -39,8 +43,8 @@ export function SiteHeader({ children }: { children: ReactNode }) {
   const count = itemCount(cart);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-brand-100 bg-brand-50/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-4">
+    <header className={shell}>
+      <div className={bar}>
         <Logo />
         <div className="flex min-w-0 items-center gap-2">
           <Link

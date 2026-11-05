@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/admin/riders", label: "Riders" },
   { href: "/admin/restaurants", label: "Restaurants" },
   { href: "/admin/money", label: "Money" },
+  { href: "/admin/delivery", label: "Delivery" },
   { href: "/admin", label: "Setup" },
   { href: "/admin/feedback", label: "Feedback" },
 ];

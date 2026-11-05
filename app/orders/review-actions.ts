@@ -35,5 +35,6 @@ export async function submitReview(_prev: State, formData: FormData): Promise<St
 
   updateTag("catalog"); // new rating shows on restaurant pages
   revalidatePath(`/orders/${orderId}`);
+  revalidatePath("/restaurants/[slug]", "page");
   return { ok: true };
 }

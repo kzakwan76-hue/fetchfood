@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { MokaMascot } from "./moka-mascot";
+import { FoodStrip } from "./food-strip";
+import { MokaIntro } from "./moka-intro";
 
 export function AuthShell({
   title,
@@ -12,13 +13,13 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto max-w-md px-4 py-6">
+    <main className="mx-auto max-w-md px-4 py-6 pb-12">
       <Link href="/" className="text-2xl font-extrabold tracking-tight text-brand-600">
         Fetch<span className="text-charcoal-900">Food</span>
       </Link>
       <div className="mt-6 rounded-3xl border border-brand-200 bg-white p-6 shadow-card">
         <div className="flex items-center gap-3">
-          <MokaMascot variant="head" size={52} className="shrink-0" />
+          <MokaIntro size={112} />
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{title}</h1>
             <p className="text-sm text-charcoal-700">{subtitle}</p>
@@ -26,6 +27,7 @@ export function AuthShell({
         </div>
         {children}
       </div>
+      <FoodStrip />
     </main>
   );
 }

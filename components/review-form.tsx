@@ -7,6 +7,14 @@ export function ReviewForm({ orderId }: { orderId: string }) {
   const [state, action, pending] = useActionState(submitReview, {});
   const [rating, setRating] = useState(0);
 
+  if (state.ok) {
+    return (
+      <p role="status" className="rounded-2xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
+        Thanks! Your review is in.
+      </p>
+    );
+  }
+
   return (
     <form action={action} className="space-y-3 rounded-3xl border border-brand-200 bg-white p-4 shadow-card">
       <input type="hidden" name="orderId" value={orderId} />

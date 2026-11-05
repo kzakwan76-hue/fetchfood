@@ -4,12 +4,13 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AddToCart } from "../../../components/add-to-cart";
 import { CartBar } from "../../../components/cart-bar";
+import { FavoriteSlot } from "../../../components/favorite-slot";
 import { RatingBadge } from "../../../components/rating-badge";
 import { RestaurantBanner } from "../../../components/restaurant-banner";
+import { ReviewSlot } from "../../../components/review-slot";
 import { Skeleton } from "../../../components/skeleton";
 import { getRecentReviews, getRestaurants, getRestaurantWithMenu } from "../../../lib/catalog";
 import { formatPKR } from "../../../lib/pk";
-import { FavoriteSlot } from "../../../components/favorite-slot";
 
 export async function generateStaticParams() {
   const restaurants = await getRestaurants();
@@ -72,12 +73,12 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
           dimmed={!restaurant.isOpen}
         />
         <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-             <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{restaurant.name}</h1>
-             <Suspense fallback={<span aria-hidden="true" className="h-10 w-10 shrink-0" />}>
-               <FavoriteSlot restaurantId={restaurant.id} />
-             </Suspense>
-           </div>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{restaurant.name}</h1>
+            <Suspense fallback={<span aria-hidden="true" className="h-10 w-10 shrink-0" />}>
+              <FavoriteSlot restaurantId={restaurant.id} />
+            </Suspense>
+          </div>
           <p className="mt-0.5 text-sm text-charcoal-700">
             {restaurant.cuisine} · {restaurant.area}
           </p>
@@ -85,12 +86,15 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
             <RatingBadge avg={restaurant.ratingAvg} count={restaurant.ratingCount} />
             <span className="rounded-full bg-brand-100 px-2.5 py-1">~{restaurant.etaMinutes} min</span>
             <span className="rounded-full bg-brand-100 px-2.5 py-1">
-              Delivery {formatPKR(restaurant.deliveryFeePkr)}
+              Delivery from {formatPKR(restaurant.deliveryFeePkr)}
             </span>
             <span className="rounded-full bg-brand-100 px-2.5 py-1">
               Min order {formatPKR(restaurant.minOrderPkr)}
             </span>
           </div>
+          <a href="#reviews" className="mt-3 inline-block text-sm font-bold text-brand-700 underline">
+            ⭐ Read or write a review
+          </a>
           {!restaurant.isOpen && (
             <p className="mt-3 rounded-xl bg-neutral-200 px-3 py-2 text-sm font-semibold text-neutral-800">
               Closed right now. Check back soon.
@@ -102,7 +106,7 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
       {categories.length > 1 && (
         <nav
           aria-label="Menu categories"
-          className="no-scrollbar sticky top-14 z-10 -mx-4 mt-4 overflow-x-auto bg-brand-50/90 px-4 py-2 backdrop-blur"
+          className="no-scrollbar sticky top-16 z-10 -mx-4 mt-4 overflow-x-auto bg-brand-50/90 px-4 py-2 backdrop-blur"
         >
           <ul className="flex gap-2">
             {categories.map((category, index) => (
@@ -120,7 +124,7 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
       )}
 
       {categories.map((category, index) => (
-        <section key={category} id={`cat-${index}`} className="mt-6 scroll-mt-28">
+        <section key={category} id={`cat-${index}`} className="mt-6 scroll-mt-32">
           <h2 className="text-lg font-bold text-charcoal-900">{category}</h2>
           <ul className="mt-2 divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
             {restaurant.items
@@ -152,10 +156,18 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
         </section>
       ))}
 
-      {reviews.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-charcoal-900">What customers say</h2>
-          <ul className="mt-2 divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
+      <section id="reviews" className="mt-8 scroll-mt-32">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-charcoal-900">Reviews</h2>
+          <span className="text-xs font-semibold">
+            <RatingBadge avg={restaurant.ratingAvg} count={restaurant.ratingCount} />
+          </span>
+        </div>
+        <Suspense fallback={<Skeleton className="mt-3 h-24 w-full" />}>
+          <ReviewSlot restaurantId={restaurant.id} restaurantName={restaurant.name} />
+        </Suspense>
+        {reviews.length > 0 ? (
+          <ul className="mt-3 divide-y divide-brand-100 overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card">
             {reviews.map((r, i) => (
               <li key={i} className="p-4 text-sm">
                 <p className="text-amber-500" aria-label={`${r.rating} out of 5 stars`}>
@@ -173,8 +185,10 @@ async function RestaurantMenu({ params }: { params: Promise<{ slug: string }> })
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        ) : (
+          <p className="mt-3 text-sm text-charcoal-700">No written reviews yet. Be the first after your order arrives.</p>
+        )}
+      </section>
     </>
   );
 }

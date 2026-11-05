@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Restaurant } from "../lib/catalog";
 import { formatPKR } from "../lib/pk";
+import { setPeek } from "../lib/peek-store";
 import { useHydrated, useZone } from "../lib/zone-store";
 import { openZoneIds } from "../app/customer/actions";
 import { RatingBadge } from "./rating-badge";
@@ -25,7 +26,8 @@ export function RestaurantList({
   const [query, setQuery] = useState("");
   const [cuisineChoice, setCuisineChoice] = useState<string | null>(null);
   const [openOnly, setOpenOnly] = useState(false);
-    const [openZones, setOpenZones] = useState<string[] | null>(null);
+  const [openZones, setOpenZones] = useState<string[] | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -55,6 +57,52 @@ export function RestaurantList({
     )
     .sort((a, b) => Number(b.isOpen) - Number(a.isOpen)); // open kitchens first
 
+  // Tell the "Ask Moka" button which restaurant card is nearest the middle of the screen,
+  // so Moka can peek and tilt his head toward it.
+  const visibleCount = visible.length;
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const items = listRef.current?.querySelectorAll<HTMLElement>("[data-peek]");
+      if (!items || items.length === 0) {
+        setPeek(null);
+        return;
+      }
+      const vh = window.innerHeight;
+      let best: HTMLElement | null = null;
+      let bestDistance = Infinity;
+      for (const el of Array.from(items)) {
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > vh) continue;
+        const distance = Math.abs((rect.top + rect.bottom) / 2 - vh * 0.45);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = el;
+        }
+      }
+      if (!best) {
+        setPeek(null);
+        return;
+      }
+      const rect = best.getBoundingClientRect();
+      const dy = Math.round((((rect.top + rect.bottom) / 2 - vh * 0.85) / vh) * 10) / 10;
+      setPeek({ name: best.dataset.peek ?? "", dy });
+    };
+    const schedule = () => {
+      if (frame === 0) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      setPeek(null);
+    };
+  }, [visibleCount]);
+
   function clearFilters() {
     setQuery("");
     setCuisineChoice(null);
@@ -68,6 +116,7 @@ export function RestaurantList({
       </div>
 
       {!hydrated && <ListSkeleton rows={2} height="h-52" />}
+
       {hydrated && zone && openZones !== null && !openZones.includes(zone.id) && (
         <p role="status" className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
           🛵 No riders are on duty in {zone.name} right now, so ordering is paused. You can still browse. Check back soon.
@@ -145,9 +194,9 @@ export function RestaurantList({
         </p>
       )}
 
-      <ul className="mt-6 space-y-5">
+      <ul ref={listRef} className="mt-6 space-y-5">
         {visible.map((r) => (
-          <li key={r.slug} className="rise">
+          <li key={r.slug} data-peek={r.name} className="rise">
             <Link
               href={`/restaurants/${r.slug}`}
               className="block overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-card motion-safe:transition motion-safe:hover:-translate-y-0.5 hover:shadow-lift"

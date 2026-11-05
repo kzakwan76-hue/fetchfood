@@ -14,6 +14,8 @@ const MESSAGES: Record<string, string> = {
   restaurant_unavailable: "This restaurant is closed or unavailable right now.",
   wrong_zone: "This restaurant doesn't deliver to your chosen area. Change your area or pick another restaurant.",
   no_riders: "No riders are on duty in your area right now, so we can't take orders. Please try again soon.",
+  pin_required: "This restaurant prices delivery by distance. Drop a pin on the map so we can work out your fee.",
+  too_far: "You're too far from this restaurant for delivery.",
   invalid_items: "An item in your cart is no longer available. Please review your cart.",
   bad_items: "Your cart is empty.",
   address_too_short: "Please enter your full delivery address.",
@@ -24,7 +26,7 @@ function text(formData: FormData, name: string): string {
   return String(formData.get(name) ?? "").trim();
 }
 
-// The map pin is optional. Anything missing or outside Pakistan is ignored (the database checks again).
+// Anything missing or outside Pakistan is ignored here (the database checks again).
 function readPin(formData: FormData): { lat: number; lng: number } | null {
   const rawLat = text(formData, "lat");
   const rawLng = text(formData, "lng");
@@ -73,6 +75,7 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
   const idem = text(formData, "idem");
   if (idem && !UUID.test(idem)) return fail("This page is out of date. Please reload it and try again.");
 
+  const pin = readPin(formData);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("place_order", {
     p_restaurant_id: restaurantId,
@@ -82,6 +85,8 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     p_note: values.note || null,
     p_zone_id: zoneId,
     p_idem: idem || null,
+    p_lat: pin?.lat ?? null,
+    p_lng: pin?.lng ?? null,
   });
 
   if (error) {
@@ -89,11 +94,7 @@ export async function placeOrder(_prev: State, formData: FormData): Promise<Stat
     return fail(MESSAGES[error.message] ?? "Could not place your order. Please try again.");
   }
 
-  // The pin and the saved address are conveniences: if either fails, the order is still placed.
-  const pin = readPin(formData);
-  if (pin) {
-    await supabase.rpc("set_order_location", { p_order_id: data, p_lat: pin.lat, p_lng: pin.lng });
-  }
+  // Saving the address is a convenience: if it fails, the order is still placed.
   if (text(formData, "saveAddress") === "on") {
     await supabase.rpc("save_address", {
       p_label: text(formData, "saveLabel").slice(0, 30) || "Saved",

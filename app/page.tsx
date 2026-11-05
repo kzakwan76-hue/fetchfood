@@ -83,17 +83,28 @@ export default async function HomePage() {
           </Link>
         </section>
 
-        <section aria-labelledby="join-heading" className="mt-12">
+        <section aria-labelledby="join-heading" className="mt-6 rounded-3xl bg-brand-600 p-6 text-white">
           <h2 id="join-heading" className="text-2xl font-extrabold tracking-tight">
             Run a restaurant or want to ride?
           </h2>
-          <p className="mt-2 text-charcoal-700">
-            Create an account first. For now we set restaurant and rider roles by hand, so reach out to us after
-            signing up.
+          <p className="mt-2 text-white/90">
+            Riders keep the whole delivery fee: apply with your CNIC and we verify every rider. Restaurants get a
+            new sales channel at a low commission. Create an account first, then reach out to us.
           </p>
-          <Link href="/signup" className="mt-3 inline-block font-bold text-brand-700 underline">
-            Create an account
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/rider/apply"
+              className="rounded-xl bg-white px-5 py-2.5 font-bold text-charcoal-900 hover:bg-brand-100"
+            >
+              Ride with us
+            </Link>
+            <Link
+              href="/signup"
+              className="rounded-xl border border-white/60 px-5 py-2.5 font-bold text-white hover:bg-white/10"
+            >
+              Create an account
+            </Link>
+          </div>
         </section>
       </main>
 
