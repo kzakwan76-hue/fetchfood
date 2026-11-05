@@ -613,3 +613,21 @@ Route (app)                          Revalidate  Expire
 - OpenStreetMap's public tile server is for light use only (policy to verify before launch); no address search or geocoding yet.
 - No live rider tracking, and the customer's order page does not show the pin.
 - Phone GPS can be inaccurate indoors; the restaurant owner does not see the pin.
+
+
+## Milestone 18: polish, Moka animations, reviews on menus, distance-based delivery fees
+**Built:** 0020_distance_fees.sql (restaurants.lat/lng hidden by grants, fee tiers in platform_settings, km_between, fee_for_km, delivery_quote, place_order with pin and distance fee, admin fee and location functions); floating outlined header; landing join box; components moka-intro (portal entrance, flex, burger, crumbs, glasses), food-strip, moka-peek and lib\peek-store (Moka tilts toward the restaurant card in view), review-slot and a Reviews section on every restaurant page; checkout fee quote and pin-required rule; /admin/delivery and a location map on each admin restaurant page; scripts\test-delivery.mjs.
+
+**Decisions**
+- Delivery fee tiers (editable): up to 2.5 km Rs. 150, up to 4 km Rs. 200, up to 7 km Rs. 250, beyond 7 km not delivered. Distance is a straight line from the restaurant's pin to the customer's pin.
+- Restaurants without a location keep their flat fee, so nothing breaks; with a location the customer's pin is required and the fee is computed inside place_order (the browser quote is only a preview).
+- Reviews stay tied to delivered orders (one per order); the restaurant page shows the right box for guests, new customers, owners and eligible customers.
+- The login food tiles are illustrations; real photos go in public/food and the PHOTOS list.
+
+**Results:** test-delivery, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-8: [write what you saw]
+
+**Limitations**
+- Straight-line distance understates road distance; restaurants need their pins set by an admin.
+- Card chips and the cart show the restaurant's base fee; the exact fee appears at checkout.
+- The login animation is timed by hand and may need tuning; no real food photos yet.
+- Customers with no delivered order cannot review, by design.
