@@ -20,27 +20,15 @@ const FOODS: Food[] = [
 // Real photos: put your own licensed images in public/food and list them here, e.g. Burger: "/food/burger.jpg".
 const PHOTOS: Record<string, string> = {};
 
-const CSS = `
-@media (prefers-reduced-motion: no-preference) {
-  .food-tile { animation: food-float 4s ease-in-out infinite; }
-}
-@keyframes food-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-`;
-
 export function FoodStrip() {
   return (
     <section aria-label="Popular food" className="mt-8">
-      <style>{CSS}</style>
       <p className="text-center text-sm font-bold text-charcoal-800">Hungry already?</p>
       <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
-        {FOODS.map((f, i) => {
+        {FOODS.map((f) => {
           const photo = PHOTOS[f.name];
           return (
-            <li
-              key={f.name}
-              className="food-tile relative aspect-square overflow-hidden rounded-2xl shadow-card"
-              style={{ animationDelay: `${(i % 6) * 0.35}s` }}
-            >
+            <li key={f.name} className="relative aspect-square overflow-hidden rounded-2xl shadow-card">
               {photo ? (
                 <Image src={photo} alt={f.name} fill sizes="120px" className="object-cover" />
               ) : (

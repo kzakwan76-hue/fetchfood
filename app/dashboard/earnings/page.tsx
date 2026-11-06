@@ -12,6 +12,7 @@ export const metadata = { title: "Earnings" };
 type Row = {
   e_restaurant_id: string; e_name: string; e_orders: number; e_sales: number;
   e_commission: number; e_paid: number; e_owed: number; e_bps: number;
+  e_owes_us: number; e_own: boolean; e_own_orders: number; e_remitted: number;
 };
 type Payout = { amount_pkr: number; note: string | null; created_at: string; restaurants: { name: string } | null };
 
@@ -23,7 +24,7 @@ export default function EarningsPage() {
       </Link>
       <h1 className="mt-3 text-2xl font-bold text-neutral-900">Earnings</h1>
       <p className="mt-1 text-sm text-neutral-600">
-        Counts orders delivered by a rider. FetchFood records each payment when it sends it.
+        Counts delivered orders. FetchFood records each payment when it sends or receives it.
       </p>
       <Suspense fallback={<ListSkeleton rows={2} height="h-40" />}>
         <Earnings />
@@ -54,12 +55,26 @@ async function Earnings() {
       {rows.map((r) => (
         <section key={r.e_restaurant_id} className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm">
           <h2 className="text-lg font-semibold text-neutral-900">{r.e_name}</h2>
+          {r.e_own && (
+            <p className="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
+              Delivered by your own riders: you keep the cash and the delivery fee, and owe FetchFood a lower commission.
+            </p>
+          )}
           <dl className="mt-2 space-y-1">
             <div className="flex justify-between"><dt className="text-neutral-600">Delivered orders</dt><dd>{r.e_orders}</dd></div>
+            {r.e_own_orders > 0 && (
+              <div className="flex justify-between"><dt className="text-neutral-600">Delivered by your own riders</dt><dd>{r.e_own_orders}</dd></div>
+            )}
             <div className="flex justify-between"><dt className="text-neutral-600">Food sales</dt><dd>{formatPKR(r.e_sales)}</dd></div>
-            <div className="flex justify-between"><dt className="text-neutral-600">FetchFood commission ({(r.e_bps / 100).toString()}%)</dt><dd>− {formatPKR(r.e_commission)}</dd></div>
+            <div className="flex justify-between"><dt className="text-neutral-600">FetchFood commission now ({(r.e_bps / 100).toString()}%)</dt><dd>− {formatPKR(r.e_commission)} so far</dd></div>
             <div className="flex justify-between"><dt className="text-neutral-600">Already paid to you</dt><dd>{formatPKR(r.e_paid)}</dd></div>
+            {r.e_remitted > 0 && (
+              <div className="flex justify-between"><dt className="text-neutral-600">You have paid FetchFood</dt><dd>{formatPKR(r.e_remitted)}</dd></div>
+            )}
             <div className="flex justify-between border-t border-neutral-200 pt-1 text-base font-bold text-neutral-900"><dt>We owe you</dt><dd>{formatPKR(r.e_owed)}</dd></div>
+            {r.e_owes_us > 0 && (
+              <div className="flex justify-between text-base font-bold text-red-700"><dt>You owe FetchFood</dt><dd>{formatPKR(r.e_owes_us)}</dd></div>
+            )}
           </dl>
         </section>
       ))}

@@ -7,6 +7,7 @@ import { formatPKR } from "../../lib/pk";
 import { ACTIVE_STATUSES, STATUS_LABEL, formatOrderTime } from "../../lib/order-status";
 import { HandoverForm } from "../../components/handover-form";
 import { OrderActions } from "../../components/order-actions";
+import { OwnDeliveryActions } from "../../components/own-delivery-actions";
 import { RefreshButton } from "../../components/refresh-button";
 import { RestaurantOpenToggle } from "../../components/restaurant-open-toggle";
 
@@ -14,6 +15,7 @@ type OrderRow = {
   id: string;
   rider_id: string | null;
   ready_at: string | null;
+  delivery_mode: string;
   status: string;
   total_pkr: number;
   delivery_address: string;
@@ -63,7 +65,7 @@ async function DashboardContent() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, rider_id, ready_at, status, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, quantity)",
+      "id, rider_id, ready_at, delivery_mode, status, total_pkr, delivery_address, phone, note, created_at, restaurants(name), order_items(item_name, quantity)",
     )
     .in("restaurant_id", restaurants.map((r) => r.id))
     .order("created_at", { ascending: false })
@@ -96,6 +98,7 @@ async function DashboardContent() {
           <ul className="mt-2 space-y-3">
             {active.map((o) => {
               const rider = riders.get(o.id);
+              const own = o.delivery_mode === "own";
               return (
                 <li key={o.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -122,7 +125,7 @@ async function DashboardContent() {
                   </p>
                   {o.note && <p className="text-sm text-neutral-700">Note: {o.note}</p>}
                   <p className="mt-1 text-sm font-semibold text-neutral-900">Cash to collect: {formatPKR(o.total_pkr)}</p>
-                  {o.status === "preparing" && o.rider_id && rider && (
+                  {!own && o.status === "preparing" && o.rider_id && rider && (
                     <HandoverForm
                       orderId={o.id}
                       name={rider.v_name}
@@ -136,7 +139,9 @@ async function DashboardContent() {
                     status={o.status}
                     hasRider={o.rider_id !== null}
                     ready={o.ready_at !== null}
+                    own={own}
                   />
+                  {own && <OwnDeliveryActions orderId={o.id} status={o.status} />}
                 </li>
               );
             })}

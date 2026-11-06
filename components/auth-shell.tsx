@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FoodStrip } from "./food-strip";
-import { MokaIntro } from "./moka-intro";
+import { MokaMascot } from "./moka-mascot";
 
 export function AuthShell({
   title,
@@ -19,7 +19,7 @@ export function AuthShell({
       </Link>
       <div className="mt-6 rounded-3xl border border-brand-200 bg-white p-6 shadow-card">
         <div className="flex items-center gap-3">
-          <MokaIntro size={112} />
+          <MokaMascot variant="head" size={52} className="shrink-0" />
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-charcoal-900">{title}</h1>
             <p className="text-sm text-charcoal-700">{subtitle}</p>

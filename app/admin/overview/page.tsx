@@ -9,8 +9,8 @@ export const metadata = { title: "Overview" };
 
 type Ov = {
   ov_orders_today: number; ov_delivered_today: number; ov_active: number; ov_sales_today: number;
-  ov_revenue: number; ov_owed: number; ov_cash: number; ov_restaurants: number; ov_riders: number;
-  ov_rider_owed: number; ov_on_duty: number;
+  ov_revenue_app: number; ov_revenue_own: number; ov_owed_app: number; ov_owed_own: number; ov_owes_us: number;
+  ov_cash: number; ov_rider_owed: number; ov_on_duty: number; ov_riders: number; ov_rest_app: number; ov_rest_own: number;
 };
 type Attention = { a_order: string; a_kind: string; a_restaurant: string; a_minutes: number };
 type Stale = { s_rider: string; s_name: string; s_held: number; s_hours: number };
@@ -84,18 +84,48 @@ async function Overview() {
       )}
 
       <p className="text-xs text-neutral-600">&ldquo;Today&rdquo; is Pakistan time. Money figures count orders delivered after the ledger was added.</p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat label="Orders today" value={String(o.ov_orders_today)} />
-        <Stat label="Delivered today" value={String(o.ov_delivered_today)} />
-        <Stat label="Active right now" value={String(o.ov_active)} />
-        <Stat label="Sales delivered today" value={formatPKR(o.ov_sales_today)} />
-        <Stat label="FetchFood net revenue (all time)" value={formatPKR(o.ov_revenue)} />
-        <Stat label="We owe restaurants" value={formatPKR(o.ov_owed)} warn={o.ov_owed > 0} />
-        <Stat label="We owe riders" value={formatPKR(o.ov_rider_owed)} warn={o.ov_rider_owed > 0} />
-        <Stat label="Riders hold (cash)" value={formatPKR(o.ov_cash)} warn={o.ov_cash > 0} />
-        <Stat label="Riders on duty" value={`${o.ov_on_duty} of ${o.ov_riders}`} />
-        <Stat label="Restaurants" value={String(o.ov_restaurants)} />
-      </div>
+
+      <section>
+        <h2 className="text-lg font-bold text-charcoal-900">Today</h2>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Orders today" value={String(o.ov_orders_today)} />
+          <Stat label="Delivered today" value={String(o.ov_delivered_today)} />
+          <Stat label="Active right now" value={String(o.ov_active)} />
+          <Stat label="Sales delivered today" value={formatPKR(o.ov_sales_today)} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-bold text-charcoal-900">Restaurants using FetchFood riders</h2>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stat label="Restaurants" value={String(o.ov_rest_app)} />
+          <Stat label="FetchFood net revenue (all time)" value={formatPKR(o.ov_revenue_app)} />
+          <Stat label="We owe these restaurants" value={formatPKR(o.ov_owed_app)} warn={o.ov_owed_app > 0} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-bold text-charcoal-900">
+          Restaurants with their own riders{" "}
+          <Link href="/admin/own-riders" className="text-sm font-semibold text-brand-700 underline">details →</Link>
+        </h2>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Restaurants" value={String(o.ov_rest_own)} />
+          <Stat label="FetchFood net revenue (all time)" value={formatPKR(o.ov_revenue_own)} />
+          <Stat label="We owe these restaurants" value={formatPKR(o.ov_owed_own)} warn={o.ov_owed_own > 0} />
+          <Stat label="Restaurants owe us" value={formatPKR(o.ov_owes_us)} warn={o.ov_owes_us > 0} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-bold text-charcoal-900">FetchFood riders</h2>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="We owe riders" value={formatPKR(o.ov_rider_owed)} warn={o.ov_rider_owed > 0} />
+          <Stat label="Riders hold (cash)" value={formatPKR(o.ov_cash)} warn={o.ov_cash > 0} />
+          <Stat label="Riders on duty" value={`${o.ov_on_duty} of ${o.ov_riders}`} />
+        </div>
+      </section>
+
       <div className="flex flex-wrap gap-3 text-sm font-semibold text-brand-700">
         <Link href="/admin/orders">All orders →</Link>
         <Link href="/admin/money">Settle up →</Link>

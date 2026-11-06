@@ -20,13 +20,18 @@ export function OrderActions({
   status,
   hasRider = false,
   ready = false,
+  own = false,
 }: {
   orderId: string;
   status: string;
   hasRider?: boolean;
   ready?: boolean;
+  own?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(changeOrderStatus, {});
+
+  // Orders delivered by the restaurant's own riders: the dashboard shows their own buttons after "preparing".
+  if (own && (status === "preparing" || status === "out_for_delivery")) return null;
 
   if (hasRider && status === "preparing") return null; // the dashboard shows the rider card and the code form
   if (status === "out_for_delivery" || hasRider) {

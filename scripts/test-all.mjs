@@ -7,7 +7,7 @@ const withServer = process.argv.includes("--with-server");
 const tests = [
   "test-assistant", "test-assistant-ai", "test-ratelimit", "test-model", "test-cart",
   "test-orders", "test-dashboard", "test-admin", "test-rider", "test-reviews",
-  "test-photos", "test-dish-photos", "test-customer", "test-idempotency", "test-ledger", "test-rider-kyc", "test-duty", "test-location", "test-delivery",
+  "test-photos", "test-dish-photos", "test-customer", "test-idempotency", "test-ledger", "test-rider-kyc", "test-duty", "test-location", "test-delivery", "test-own-riders",
 ];
 if (withServer) tests.push("test-route");
 

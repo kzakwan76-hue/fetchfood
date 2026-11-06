@@ -35,6 +35,9 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   const { data: called } = await supabase.rpc("admin_order_call", { p_id: id });
   const { data: locData } = await supabase.rpc("admin_order_location", { p_id: id });
   const loc = ((locData ?? []) as { l_lat: number | null; l_lng: number | null }[])[0];
+  const { data: modeData } = await supabase.rpc("admin_order_mode", { p_id: id });
+  const mode = ((modeData ?? []) as { m_mode: string; m_dispatched: string | null }[])[0];
+  const own = mode?.m_mode === "own";
 
   return (
     <div className="mt-4 space-y-4">
@@ -45,8 +48,17 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <dl className="mt-2">
           <Line label="Placed" value={formatOrderTime(d.d_created)} />
-          <Line label="Ready for pickup" value={d.d_ready ? formatOrderTime(d.d_ready) : "not yet"} />
-          <Line label="Rider called customer" value={called ? formatOrderTime(String(called)) : "not recorded"} />
+          {own ? (
+            <Line
+              label="Marked out for delivery by the restaurant"
+              value={mode?.m_dispatched ? formatOrderTime(mode.m_dispatched) : "not yet"}
+            />
+          ) : (
+            <>
+              <Line label="Ready for pickup" value={d.d_ready ? formatOrderTime(d.d_ready) : "not yet"} />
+              <Line label="Rider called customer" value={called ? formatOrderTime(String(called)) : "not recorded"} />
+            </>
+          )}
           <Line label="Delivered" value={d.d_delivered ? formatOrderTime(d.d_delivered) : "not yet"} />
           <Line
             label="Restaurant"
@@ -55,7 +67,9 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           <Line
             label="Delivered by"
             value={
-              d.d_rider_id ? (
+              own ? (
+                "the restaurant's own rider"
+              ) : d.d_rider_id ? (
                 <Link href={`/admin/riders/${d.d_rider_id}`} className="font-semibold text-brand-700 underline">
                   {d.d_rider ?? d.d_rider_email}
                 </Link>
@@ -99,16 +113,28 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           <Line label="Customer pays (cash)" value={formatPKR(d.d_total)} bold />
         </dl>
         {d.d_delivered && d.d_commission !== null ? (
-          <dl className="mt-3 border-t border-neutral-200 pt-2">
-            <Line label={`Commission (${((d.d_bps ?? 0) / 100).toString()}%)`} value={formatPKR(d.d_commission)} />
-            <Line label="Owed to restaurant" value={formatPKR(d.d_rest_share ?? 0)} />
-            <Line label="Rider keeps" value={formatPKR(d.d_rider_pay ?? 0)} />
-            <Line label="FetchFood delivery cut" value={formatPKR(d.d_platform_fee ?? 0)} />
-            <Line label="FetchFood earns" value={formatPKR(d.d_commission + (d.d_platform_fee ?? 0))} bold />
-            <Line label="Rider hands in" value={formatPKR(d.d_total - (d.d_rider_pay ?? 0))} />
-          </dl>
+          own ? (
+            <dl className="mt-3 border-t border-neutral-200 pt-2">
+              <Line label={`Commission the restaurant owes us (${((d.d_bps ?? 0) / 100).toString()}%, own-rider rate)`} value={formatPKR(d.d_commission)} bold />
+              <Line label="Restaurant keeps" value={formatPKR(d.d_total - d.d_commission)} />
+              <p className="mt-1 text-neutral-600">The restaurant&apos;s rider collected the cash, and the delivery fee stays with the restaurant.</p>
+            </dl>
+          ) : (
+            <dl className="mt-3 border-t border-neutral-200 pt-2">
+              <Line label={`Commission (${((d.d_bps ?? 0) / 100).toString()}%)`} value={formatPKR(d.d_commission)} />
+              <Line label="Owed to restaurant" value={formatPKR(d.d_rest_share ?? 0)} />
+              <Line label="Rider keeps" value={formatPKR(d.d_rider_pay ?? 0)} />
+              <Line label="FetchFood delivery cut" value={formatPKR(d.d_platform_fee ?? 0)} />
+              <Line label="FetchFood earns" value={formatPKR(d.d_commission + (d.d_platform_fee ?? 0))} bold />
+              <Line label="Rider hands in" value={formatPKR(d.d_total - (d.d_rider_pay ?? 0))} />
+            </dl>
+          )
         ) : (
-          <p className="mt-2 text-neutral-600">The money breakdown is written when the rider marks the order delivered.</p>
+          <p className="mt-2 text-neutral-600">
+            {own
+              ? "The money breakdown is written when the restaurant marks the order delivered."
+              : "The money breakdown is written when the rider marks the order delivered."}
+          </p>
         )}
       </div>
     </div>
