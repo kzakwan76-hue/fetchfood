@@ -13,6 +13,8 @@ function tilesFor(role: string | null | undefined): Tile[] {
   const tiles: Tile[] = [
     { href: "/orders", label: "My orders", hint: "Track and review", emoji: "📦" },
     { href: "/feedback", label: "Send feedback", hint: "Ideas and problems", emoji: "💬" },
+    { href: "/account/profile", label: "Edit profile", hint: "Name, phone, delete account", emoji: "✏️" },
+    { href: "/help", label: "Help and contact", hint: "Talk to us", emoji: "🆘" },
     { href: "/favourites", label: "Favourites", hint: "Restaurants you saved", emoji: "❤️" },
     { href: "/addresses", label: "Saved addresses", hint: "Faster checkout", emoji: "🏡" },
   ];

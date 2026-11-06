@@ -49,6 +49,23 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           className={inputClass}
         />
       </label>
+      {!isSignup && (
+        <p className="text-sm">
+          <Link href="/forgot-password" className="font-semibold text-brand-600">
+            Forgot your password?
+          </Link>
+        </p>
+      )}
+      {isSignup && (
+        <label className="flex items-start gap-2 text-sm text-neutral-800">
+          <input name="agree" type="checkbox" required className="mt-1" />
+          <span>
+            I accept the{" "}
+            <Link href="/terms" className="font-semibold text-brand-600 underline">Terms</Link> and the{" "}
+            <Link href="/privacy" className="font-semibold text-brand-600 underline">Privacy policy</Link>.
+          </span>
+        </label>
+      )}
 
       {state.error && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">

@@ -17,7 +17,7 @@ const login = async (client, email, password, who) => {
   assert.ok(!r.error, `${who} login failed`);
   return r.data.user.id;
 };
-const ownerId = await login(owner, TEST_EMAIL, TEST_PASSWORD, "test owner");
+await login(owner, TEST_EMAIL, TEST_PASSWORD, "test owner");
 
 // 1. Refusals and validation.
 assert.ok((await anon.rpc("set_order_location", { p_order_id: NIL, p_lat: LAT, p_lng: LNG })).error, "anon refused");

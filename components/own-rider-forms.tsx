@@ -25,7 +25,7 @@ export function OwnToggleForm({ restaurantId, on }: { restaurantId: string; on: 
         onClick={(e) => {
           const text = on
             ? "Switch off own riders? New orders will use FetchFood riders again. Orders already placed keep their way of delivery."
-            : "Switch on own riders for this restaurant? New orders will be delivered by the restaurant's own riders at the lower commission.";
+            : "Switch on own riders for this restaurant? Only do this after the restaurant has accepted the restaurant agreement. New orders will be delivered by the restaurant's own riders at the lower commission.";
           if (!window.confirm(text)) e.preventDefault();
         }}
         className={on ? "rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 disabled:opacity-50" : button}

@@ -109,7 +109,10 @@ export default async function HomePage() {
       </main>
 
       <footer className="mt-12 border-t border-brand-200 pt-4 text-sm text-charcoal-700">
-        © FetchFood · Lahore · Cash on delivery
+        © FetchFood · Lahore · Cash on delivery ·{" "}
+        <Link href="/help" className="underline">Help</Link> ·{" "}
+        <Link href="/terms" className="underline">Terms</Link> ·{" "}
+        <Link href="/privacy" className="underline">Privacy</Link>
       </footer>
     </div>
   );

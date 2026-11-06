@@ -6,13 +6,23 @@ import { NavMenu } from "../components/nav-menu";
 import { HeaderFallback, SiteHeader } from "../components/site-header";
 import "./globals.css";
 
+const description =
+  "FetchFood delivers food from local restaurants, cafés and home kitchens to Lahore neighbourhoods that bigger apps overlook.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "FetchFood — Food delivery for neighbourhoods others skip",
     template: "%s | FetchFood",
   },
-  description:
-    "FetchFood delivers food from local restaurants, cafés and home kitchens to Lahore neighbourhoods that bigger apps overlook.",
+  description,
+  openGraph: {
+    title: "FetchFood — Food delivery for neighbourhoods others skip",
+    description,
+    siteName: "FetchFood",
+    locale: "en_PK",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

@@ -25,7 +25,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     validateFullName(fullName) ??
     (isValidPkPhone(phone) ? null : "Enter a valid Pakistani mobile number, e.g. 0300 1234567.") ??
     validateEmail(email) ??
-    validatePassword(password);
+    validatePassword(password) ??
+    (formData.get("agree") === "on" ? null : "Please tick the box to accept the Terms and Privacy policy.");
   if (problem) return { error: problem };
 
   const supabase = await createClient();

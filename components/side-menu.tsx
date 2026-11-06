@@ -12,6 +12,7 @@ const BROWSE: Entry[] = [
   { href: "/restaurants", label: "Restaurants", emoji: "🍽️" },
   { href: "/assistant", label: "Ask Moka", emoji: "🐥" },
   { href: "/cart", label: "Cart", emoji: "🛒" },
+  { href: "/help", label: "Help and contact", emoji: "🆘" },
 ];
 const ACCOUNT: Entry[] = [
   { href: "/orders", label: "My orders", emoji: "📦" },

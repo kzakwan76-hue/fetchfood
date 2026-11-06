@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "../../lib/supabase/server";
+import { ZoneEditForm } from "../../components/admin-edit-forms";
 import {
   ReleaseButton,
   RestaurantForm,
@@ -120,7 +121,17 @@ async function AdminContent() {
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4">
         <h2 className="mb-1 text-lg font-semibold text-neutral-900">Zones ({zones.length})</h2>
-        <p className="mb-3 text-sm text-neutral-600">{zones.map((z) => z.name).join(" · ") || "No zones yet."}</p>
+        {zones.length === 0 ? (
+          <p className="mb-3 text-sm text-neutral-600">No zones yet.</p>
+        ) : (
+          <ul className="mb-3 divide-y divide-neutral-200">
+            {zones.map((z) => (
+              <li key={z.id}>
+                <ZoneEditForm id={z.id} name={z.name} active={z.is_active} />
+              </li>
+            ))}
+          </ul>
+        )}
         <ZoneForm />
       </section>
 

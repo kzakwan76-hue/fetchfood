@@ -2,8 +2,8 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 
-// Only the sign-up confirmation types are accepted here.
-const TYPES: EmailOtpType[] = ["email", "signup"];
+// Only sign-up confirmation and password recovery links are accepted here.
+const TYPES: EmailOtpType[] = ["email", "signup", "recovery"];
 
 export async function GET(request: NextRequest) {
   const tokenHash = request.nextUrl.searchParams.get("token_hash");
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (!error) {
-      destination.pathname = "/account";
+      destination.pathname = type === "recovery" ? "/reset-password" : "/account";
       return NextResponse.redirect(destination);
     }
   }

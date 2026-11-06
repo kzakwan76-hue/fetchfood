@@ -4,6 +4,7 @@ import { AdminPage, Line, OrderRows, card, type OrderRow } from "../../../../com
 import { RestaurantLocationForm } from "../../../../components/delivery-forms";
 import { CommissionForm } from "../../../../components/money-forms";
 import { OwnToggleForm, RemitForm } from "../../../../components/own-rider-forms";
+import { ActiveForm, OwnerForm, RestaurantDetailsForm } from "../../../../components/admin-edit-forms";
 import { requireAdmin } from "../../../../lib/admin";
 import { formatPKR } from "../../../../lib/pk";
 import type { RestRow } from "../page";
@@ -25,7 +26,15 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   const r = ((data ?? []) as RestRow[])[0];
   if (!r) notFound();
   const { data: orders } = await supabase.rpc("admin_orders", { p_restaurant: id, p_limit: 50 });
-  const { data: locData } = await supabase.rpc("admin_restaurant_locations");
+    const { data: locData } = await supabase.rpc("admin_restaurant_locations");
+  const { data: basicData } = await supabase
+    .from("restaurants")
+    .select("name, cuisine, area, eta_minutes, delivery_fee_pkr, is_active")
+    .eq("id", id)
+    .maybeSingle();
+  const basics = basicData as {
+    name: string; cuisine: string; area: string; eta_minutes: number; delivery_fee_pkr: number; is_active: boolean;
+  } | null;
   const loc = ((locData ?? []) as { l_id: string; l_lat: number | null; l_lng: number | null }[]).find((x) => x.l_id === id);
 
   return (
@@ -81,6 +90,31 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         <RestaurantLocationForm restaurantId={r.s_id} lat={loc?.l_lat ?? null} lng={loc?.l_lng ?? null} />
       </div>
 
+      <div className={card}>
+        <p className="font-bold text-charcoal-900">Details</p>
+        <RestaurantDetailsForm
+          id={r.s_id}
+          name={basics?.name ?? r.s_name}
+          cuisine={basics?.cuisine ?? ""}
+          area={basics?.area ?? r.s_area}
+          eta={basics?.eta_minutes ?? 40}
+          fee={basics?.delivery_fee_pkr ?? 150}
+        />
+      </div>
+      <div className={card}>
+        <p className="font-bold text-charcoal-900">Owner</p>
+        <p className="text-neutral-600">Now: {r.s_owner ?? "none"}. The previous owner goes back to being a customer if they own nothing else.</p>
+        <OwnerForm id={r.s_id} />
+      </div>
+      <div className={card}>
+        <p className="font-bold text-charcoal-900">Visibility</p>
+        <p className="text-neutral-600">
+          {basics?.is_active === false
+            ? "Hidden: customers cannot see this restaurant."
+            : "Visible to customers. Hide it to pause it completely (it needs no orders in progress)."}
+        </p>
+        <ActiveForm id={r.s_id} active={basics?.is_active ?? true} />
+      </div>
       <h2 className="text-lg font-bold text-charcoal-900">Their orders</h2>
       <OrderRows rows={(orders ?? []) as OrderRow[]} />
     </div>

@@ -100,6 +100,14 @@ export function RiderApplyForm() {
       <label className={label}>A clear selfie of your face
         <input name="selfie" type="file" accept="image/jpeg,image/png,image/webp" required className="mt-1 block w-full text-sm" />
       </label>
+      <label className="flex items-start gap-2 text-sm text-neutral-800">
+        <input type="checkbox" required className="mt-1" />
+        <span>
+          I have read and accept the{" "}
+          <a href="/rider-agreement" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 underline">Rider agreement</a> and the{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 underline">Privacy policy</a>.
+        </span>
+      </label>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
       <button type="submit" disabled={busy} className="w-full rounded-xl bg-brand-600 px-4 py-2.5 font-bold text-white hover:bg-brand-700 disabled:opacity-60">
         {busy ? "Uploading… please wait" : "Send application"}

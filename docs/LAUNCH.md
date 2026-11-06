@@ -58,3 +58,11 @@ Check that /admin shows "not found" for a normal customer.
 1. Run migrations 0001 to 0021.
 2. At /admin/own-riders set the commission discount (default 4 points: 10% becomes 6%) and switch own riders on per restaurant. Orders already placed keep the way they were delivered.
 3. Own-rider restaurants keep the cash and the whole delivery fee and owe us the lowered commission, netted against what we owe them. Record payments they make to us on /admin/own-riders. Put this in the restaurant agreement.
+
+
+## 9. Wrap-up (migration 0022)
+1. Run migrations 0001 to 0022.
+2. Password reset: in Supabase, Authentication > Email Templates > "Reset password", set the link to {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery
+3. Set NEXT_PUBLIC_SITE_URL in Vercel to your live address (used for link previews, robots and the sitemap).
+4. Have a qualified person read /terms, /privacy, /rider-agreement and /restaurant-agreement before real orders. Contact details live in lib/site.ts.
+5. The three founders should also write a short agreement between themselves (who owns what, how profit is split, who is responsible if money goes missing).
