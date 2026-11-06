@@ -648,3 +648,17 @@ Route (app)                          Revalidate  Expire
 - Own-rider restaurants mark their own orders delivered (fake-delivery risk for the AI unlock and reviews); watch the Own riders page.
 - The restaurant could withhold commission; we can only stop paying them what we owe.
 - The ordering-paused banner is zone-wide and may not match a zone with mixed restaurant types.
+
+
+## Milestone 20: wrap-up
+**Built:** 0022_wrapup.sql (delete_my_account, admin_set_restaurant_active, admin_update_restaurant, admin_set_restaurant_owner, admin_update_zone); forgot and reset password (/forgot-password, /reset-password, recovery type in /auth/confirm); signup consent tick; /account/profile (edit name and phone, delete account); /terms, /privacy, /rider-agreement, /restaurant-agreement, /help with contact details in lib\site.ts; rider application consent tick; admin tools to edit, hide and re-own restaurants and to rename or deactivate zones; not-found and error pages, icon, robots, sitemap, link previews; scripts\test-account.mjs.
+
+**Decisions**
+- Account deletion removes the login and personal data and wipes address, phone, note and pin from the person's orders; orders and reviews stay anonymously. Admins, owners and riders cannot delete themselves; open orders block it.
+- Reset links always give the same answer (no email probing). Legal pages are plain-language drafts for an unregistered pilot run by three friends; a qualified person should review them.
+
+**Results:** test-account, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-9: [write what you saw]
+
+**Limitations**
+- Consent is a tick, not stored per account. Rider documents stay in storage after a rider account is deleted by an admin.
+- Legal text is not lawyer-reviewed; the business is unregistered.
