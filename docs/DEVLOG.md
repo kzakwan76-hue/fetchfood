@@ -631,3 +631,20 @@ Route (app)                          Revalidate  Expire
 - Card chips and the cart show the restaurant's base fee; the exact fee appears at checkout.
 - The login animation is timed by hand and may need tuning; no real food photos yet.
 - Customers with no delivered order cannot review, by design.
+
+
+## Milestone 19: own-rider restaurants and split overview
+**Built:** 0021_own_riders.sql (orders.delivery_mode, restaurants.own_delivery, own_rider_discount_bps, restaurant_remittances, restaurant_balance with netting, own_commission_bps, owner_own_dispatch and owner_own_delivered, owner_mark_ready refusing own orders, admin own-rider functions, admin_orders labelling, admin_own_orders, rebuilt admin_restaurants, owner_earnings and admin_overview); /admin/own-riders; richer admin restaurant pages; split Overview; owner dashboard and earnings for own-rider orders; scripts\test-own-riders.mjs. Moka's login entrance and peek animations were removed (the plain blinking head and the Ask Moka pill are back; the food tiles stay, static).
+
+**Decisions**
+- Own-rider commission = normal commission minus a discount (default 4 points: 10% becomes 6%), snapshotted per order.
+- The restaurant keeps the cash and the whole delivery fee on its own deliveries and owes us the lowered commission; one running balance nets it against what we owe them for orders our riders delivered. Their payments to us are recorded as remittances, capped at what they owe.
+- Switching own riders on or off affects new orders only. Own-rider orders skip the on-duty rule.
+- Overview now separates app-rider restaurants, own-rider restaurants and FetchFood riders.
+
+**Results:** test-own-riders, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-10: [write what you saw]
+
+**Limitations**
+- Own-rider restaurants mark their own orders delivered (fake-delivery risk for the AI unlock and reviews); watch the Own riders page.
+- The restaurant could withhold commission; we can only stop paying them what we owe.
+- The ordering-paused banner is zone-wide and may not match a zone with mixed restaurant types.
