@@ -662,3 +662,22 @@ Route (app)                          Revalidate  Expire
 **Limitations**
 - Consent is a tick, not stored per account. Rider documents stay in storage after a rider account is deleted by an admin.
 - Legal text is not lawyer-reviewed; the business is unregistered.
+
+
+## Milestone 21: app-style interface (login tabs, bottom bar, home header, cuisine filters)
+**Built:** orange login and signup screen with Customer / Restaurant / Rider tabs (components\auth-shell.tsx, auth-tabs.tsx, auth-form.tsx, lib\auth-role.ts, app\auth\actions.ts); bottom tab bar (components\bottom-nav.tsx); orange home header with search and Ask Moka (components\site-header.tsx, ask-moka-pill.tsx); new home page with cuisine circles and "Near you" row (app\page.tsx, components\home-picks.tsx); cuisine categories and URL-driven filtering (lib\cuisine.ts, components\restaurant-list.tsx); scripts\test-ui-logic.ts. Removed the food picture, the floating Ask Moka button and the header cart icon.
+
+**Decisions**
+- The role tab only picks the landing page after login (/account, /rider/apply, /dashboard) from a fixed list. It never grants a role; riders still need an approved application and owners are set by admin.
+- Restaurant sign-up shows a Partner card (agreement + Help page) instead of a form, because owner accounts are created by admin.
+- Filter state (cuisine, search text) lives in the URL, so back, refresh and links from the home page work.
+- Google sign-in postponed to the next milestone.
+- The long marketing sections were removed from the home page; the Moka allergy/halal disclaimer stays.
+
+**Results:** test-ui-logic, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-9: [write what you saw]
+
+**Limitations**
+- Category chips are keyword rules over free-text cuisine names, so an odd cuisine name appears only under All.
+- Search covers restaurant name, cuisine and area, not dishes.
+- With email confirmation on, the role tab does not decide the landing page after the confirm link.
+- Tab bar icons are emoji; no custom icon set yet.
