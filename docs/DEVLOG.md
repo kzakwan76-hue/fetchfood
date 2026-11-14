@@ -673,6 +673,7 @@ Route (app)                          Revalidate  Expire
 - Filter state (cuisine, search text) lives in the URL, so back, refresh and links from the home page work.
 - Google sign-in postponed to the next milestone.
 - The long marketing sections were removed from the home page; the Moka allergy/halal disclaimer stays.
+- Layout bugs found on the home page in phone view and fixed: the menu button was white on white; opening the side menu scrolled the page sideways (focus on an off-screen close button, now focus({ preventScroll: true })); sideways-scrolling rows made the whole page 630 px wide, which stretched the fixed bottom bar and the menu panel (fixed by making each scroll row position: relative, plus overflow-x: clip on the page wrapper, the home header and html/body).
 
 **Results:** test-ui-logic, test-all, tsc, lint, build: [write what you saw] | browser checklist 1-9: [write what you saw]
 
@@ -681,3 +682,5 @@ Route (app)                          Revalidate  Expire
 - Search covers restaurant name, cuisine and area, not dishes.
 - With email confirmation on, the role tab does not decide the landing page after the confirm link.
 - Tab bar icons are emoji; no custom icon set yet.
+- Layouts checked at 320 px and up (iPhone SE preset); narrower frames are not supported. Checked in DevTools only, not yet on a real phone.
+- The exact element that overflowed was not confirmed with a script; the fix worked, as reported.
