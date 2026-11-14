@@ -1,17 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type { Restaurant } from "../lib/catalog";
+import { CATEGORIES, matchesCategory, parseCategory } from "../lib/cuisine";
 import { formatPKR } from "../lib/pk";
 import { useHydrated, useZone } from "../lib/zone-store";
 import { openZoneIds } from "../app/customer/actions";
+import { AskMokaPill } from "./ask-moka-pill";
 import { RatingBadge } from "./rating-badge";
 import { RestaurantBanner } from "./restaurant-banner";
 import { ListSkeleton } from "./skeleton";
 import { ZonePicker, type ZoneOption } from "./zone-picker";
 
 const chip = "whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-semibold";
+const on = "border-brand-600 bg-brand-600 text-white";
+const off = "border-brand-200 bg-white text-charcoal-800";
 
 export function RestaurantList({
   restaurants,
@@ -22,10 +27,15 @@ export function RestaurantList({
 }) {
   const hydrated = useHydrated();
   const chosen = useZone();
-  const [query, setQuery] = useState("");
-  const [cuisineChoice, setCuisineChoice] = useState<string | null>(null);
+  const params = useSearchParams();
+  // The URL is the source of truth for the cuisine chip and the first search text.
+  const urlQuery = params.get("q") ?? "";
+  const category = parseCategory(params.get("cuisine"));
+  const wantsSearch = params.get("search") === "1";
+  const [typed, setTyped] = useState<string | null>(null); // null = the person has not typed yet
   const [openOnly, setOpenOnly] = useState(false);
   const [openZones, setOpenZones] = useState<string[] | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -43,22 +53,30 @@ export function RestaurantList({
 
   const zone = zones.find((z) => z.id === chosen?.id) ?? null;
   const inZone = zone ? restaurants.filter((r) => r.zoneId === zone.id) : [];
-  const cuisines = [...new Set(inZone.map((r) => r.cuisine))].sort();
-  const cuisine = cuisineChoice && cuisines.includes(cuisineChoice) ? cuisineChoice : null;
+  const showControls = hydrated && zone !== null && inZone.length > 0;
+
+  useEffect(() => {
+    if (wantsSearch && showControls) searchRef.current?.focus();
+  }, [wantsSearch, showControls]);
+
+  const query = typed ?? urlQuery;
   const q = query.trim().toLowerCase();
+  const chips = CATEGORIES.filter((c) => c.key === category || inZone.some((r) => matchesCategory(r.cuisine, c.key)));
   const visible = inZone
     .filter(
       (r) =>
-        (!cuisine || r.cuisine === cuisine) &&
+        matchesCategory(r.cuisine, category) &&
         (!openOnly || r.isOpen) &&
         (!q || `${r.name} ${r.cuisine} ${r.area}`.toLowerCase().includes(q)),
     )
     .sort((a, b) => Number(b.isOpen) - Number(a.isOpen)); // open kitchens first
 
-  function clearFilters() {
-    setQuery("");
-    setCuisineChoice(null);
-    setOpenOnly(false);
+  function hrefFor(key: string | null): string {
+    const next = new URLSearchParams();
+    if (key) next.set("cuisine", key);
+    if (urlQuery) next.set("q", urlQuery);
+    const s = next.toString();
+    return s ? `/restaurants?${s}` : "/restaurants";
   }
 
   return (
@@ -87,62 +105,64 @@ export function RestaurantList({
         </p>
       )}
 
-      {hydrated && zone && inZone.length > 0 && (
+      {showControls && (
         <div className="mt-5 space-y-3">
-          <label className="block">
-            <span className="sr-only">Search restaurants</span>
+          <div className="flex items-center rounded-full border border-brand-200 bg-white p-1.5 pl-4 shadow-sm focus-within:ring-4 focus-within:ring-brand-200">
+            <span aria-hidden="true">🔍</span>
             <input
+              ref={searchRef}
               type="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => setTyped(e.target.value)}
+              aria-label="Search restaurants"
               placeholder="Search restaurants or cuisines"
-              className="w-full rounded-2xl border border-brand-200 bg-white px-4 py-2.5 shadow-sm"
+              className="pill-input min-w-0 flex-1 bg-transparent px-2 py-2 text-sm"
             />
-          </label>
+            <AskMokaPill />
+          </div>
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
             <button
               type="button"
               aria-pressed={openOnly}
               onClick={() => setOpenOnly((v) => !v)}
-              className={`${chip} ${
-                openOnly ? "border-green-600 bg-green-100 text-green-900" : "border-brand-200 bg-white text-charcoal-800"
-              }`}
+              className={`${chip} ${openOnly ? "border-green-600 bg-green-100 text-green-900" : off}`}
             >
               Open now
             </button>
-            <button
-              type="button"
-              aria-pressed={cuisine === null}
-              onClick={() => setCuisineChoice(null)}
-              className={`${chip} ${
-                cuisine === null ? "border-brand-600 bg-brand-600 text-white" : "border-brand-200 bg-white text-charcoal-800"
-              }`}
-            >
+            <Link href={hrefFor(null)} replace scroll={false} aria-current={category === null ? "true" : undefined} className={`${chip} ${category === null ? on : off}`}>
               All
-            </button>
-            {cuisines.map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-pressed={cuisine === c}
-                onClick={() => setCuisineChoice(c)}
-                className={`${chip} ${
-                  cuisine === c ? "border-brand-600 bg-brand-600 text-white" : "border-brand-200 bg-white text-charcoal-800"
-                }`}
+            </Link>
+            {chips.map((c) => (
+              <Link
+                key={c.key}
+                href={hrefFor(c.key)}
+                replace
+                scroll={false}
+                aria-current={category === c.key ? "true" : undefined}
+                className={`${chip} ${category === c.key ? on : off}`}
               >
-                {c}
-              </button>
+                <span aria-hidden="true">{c.emoji}</span> {c.label}
+              </Link>
             ))}
           </div>
         </div>
       )}
 
-      {hydrated && zone && inZone.length > 0 && visible.length === 0 && (
+      {showControls && visible.length === 0 && (
         <p className="mt-6 rounded-2xl bg-white px-4 py-3 text-sm text-charcoal-700 shadow-card">
           No restaurants match.{" "}
-          <button type="button" onClick={clearFilters} className="font-semibold text-brand-700 underline">
+          <Link
+            href="/restaurants"
+            replace
+            scroll={false}
+            onClick={() => {
+              setTyped(null);
+              setOpenOnly(false);
+            }}
+            className="font-semibold text-brand-700 underline"
+          >
             Clear filters
-          </button>
+          </Link>
         </p>
       )}
 

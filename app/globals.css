@@ -113,3 +113,14 @@ form:has(#craving:focus) {
 @media (prefers-reduced-motion: reduce) {
   .slide-in, .fade-in { animation: none; }
 }
+
+
+/* Inputs inside a rounded search pill: the pill shows the focus ring instead (focus-within). */
+.pill-input:focus-visible {
+  outline: none;
+}
+
+/* Safety net: nothing may make the page scroll sideways. clip (not hidden) keeps position: sticky working. */
+html, body {
+  overflow-x: clip;
+}

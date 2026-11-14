@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { AskMokaButton } from "../components/ask-moka-button";
+import { BottomNav } from "../components/bottom-nav";
 import { MokaStyles } from "../components/moka-mascot";
 import { NavMenu } from "../components/nav-menu";
 import { HeaderFallback, SiteHeader } from "../components/site-header";
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f97316",
+  themeColor: "#ea580c",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         {children}
         <Suspense fallback={null}>
-          <AskMokaButton />
+          <BottomNav />
         </Suspense>
       </body>
     </html>

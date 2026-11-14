@@ -13,7 +13,7 @@ export function CartBar() {
   return (
     <Link
       href="/cart"
-      className="fixed inset-x-4 bottom-4 mx-auto flex max-w-2xl items-center justify-between rounded-2xl bg-neutral-900 px-5 py-3 font-semibold text-white shadow-lg"
+      className="fixed inset-x-4 bottom-24 mx-auto flex max-w-2xl items-center justify-between rounded-2xl bg-neutral-900 px-5 py-3 font-semibold text-white shadow-lg"
     >
       <span>
         View cart · {count} item{count > 1 ? "s" : ""}

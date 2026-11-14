@@ -1,14 +1,15 @@
-import Link from "next/link";
-import { AuthForm } from "../../components/auth-form";
+import { Suspense } from "react";
+import { AuthShell } from "../../components/auth-shell";
+import { AuthTabs } from "../../components/auth-tabs";
+
+export const metadata = { title: "Create account" };
 
 export default function SignupPage() {
   return (
-    <main className="mx-auto max-w-md px-4 py-6">
-      <Link href="/" className="text-sm font-semibold text-brand-600">
-        ← FetchFood
-      </Link>
-      <h1 className="mt-3 text-2xl font-bold text-neutral-900">Create your account</h1>
-      <AuthForm mode="signup" />
-    </main>
+    <AuthShell title="Let's get started" subtitle="Create an account to order food, track orders and more.">
+      <Suspense fallback={<div className="skeleton mt-6 h-72" />}>
+        <AuthTabs mode="signup" />
+      </Suspense>
+    </AuthShell>
   );
 }

@@ -87,7 +87,7 @@ export function SideMenu({
     if (!open) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
+    closeRef.current?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
@@ -175,7 +175,7 @@ export function SideMenu({
         aria-label="Open menu"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-200 bg-white text-xl shadow-sm hover:bg-brand-100"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-200 bg-white text-xl text-charcoal-900 shadow-sm hover:bg-brand-100"
       >
         <span aria-hidden="true">☰</span>
       </button>

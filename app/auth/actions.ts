@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabase/server";
 import { isValidPkPhone, normalizePkPhone } from "../../lib/pk";
+import { landingFor, parseRole } from "../../lib/auth-role";
 import {
   validateEmail,
   validateFullName,
@@ -40,7 +41,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (!data.session) {
     return { error: "Account created. Confirm your email, then log in." };
   }
-  redirect("/account");
+  // The tab only picks the landing page from a fixed list. It grants nothing.
+  redirect(landingFor(parseRole(text(formData, "role"))));
 }
 
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -50,7 +52,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "Wrong email or password." };
-  redirect("/account");
+  redirect(landingFor(parseRole(text(formData, "role"))));
 }
 
 export async function signOut(): Promise<void> {

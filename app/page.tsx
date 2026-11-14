@@ -1,114 +1,78 @@
 import Link from "next/link";
+import { HomePicks } from "../components/home-picks";
 import { MokaMascot } from "../components/moka-mascot";
-import { ZonePicker } from "../components/zone-picker";
-import { getZones } from "../lib/catalog";
-
-const STEPS = [
-  { emoji: "📍", title: "Pick your area", text: "Tell us which Lahore neighbourhood you're in. You only see kitchens that deliver there." },
-  { emoji: "🍛", title: "Order or ask Moka", text: "Browse menus yourself, or let Moka suggest real dishes that are open right now." },
-  { emoji: "💵", title: "Pay on arrival", text: "Cash on delivery. The total is calculated by our server, so there are no surprises." },
-];
+import { getRestaurants, getZones } from "../lib/catalog";
+import { CATEGORIES } from "../lib/cuisine";
 
 export default async function HomePage() {
-  const zones = await getZones().catch(() => []);
+  const [zones, restaurants] = await Promise.all([
+    getZones().catch(() => []),
+    getRestaurants().catch(() => []),
+  ]);
+  const circle = "flex h-14 w-14 items-center justify-center rounded-full border text-2xl";
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-6">
-      <main className="flex-1">
-        <section className="grid items-center gap-6 py-8 sm:grid-cols-[1fr_auto]">
-          <div className="rise">
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-              Hungry, but your area is <span className="text-brand-600">“not serviceable”</span>?
-            </h1>
-            <p className="mt-4 text-lg text-charcoal-700">
-              FetchFood delivers from local restaurants to Lahore neighbourhoods the big apps skip.
-            </p>
-          </div>
-          <div className="mx-auto sm:mx-0">
-            <MokaMascot variant="full" size={190} />
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-brand-200 bg-white p-5 shadow-card">
-          <ZonePicker zones={zones} />
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/restaurants"
-              className="rounded-xl bg-brand-600 px-5 py-2.5 font-bold text-white hover:bg-brand-700"
-            >
-              See restaurants
-            </Link>
-            <Link
-              href="/assistant"
-              className="rounded-xl border border-brand-200 bg-white px-5 py-2.5 font-bold text-charcoal-900 hover:bg-brand-100"
-            >
-              Ask Moka
-            </Link>
-          </div>
-        </section>
-
-        <section aria-labelledby="how-heading" className="mt-12">
-          <h2 id="how-heading" className="text-2xl font-extrabold tracking-tight">
-            How it works
+    <div className="mx-auto flex max-w-3xl flex-col px-4">
+      <main className="flex-1 pb-6">
+        <section aria-labelledby="mind-heading" className="mt-2">
+          <h2 id="mind-heading" className="text-xl font-extrabold tracking-tight text-charcoal-900">
+            What&apos;s on your mind?
           </h2>
-          <ol className="mt-4 grid gap-4 sm:grid-cols-3">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="rounded-3xl border border-brand-200 bg-white p-4 shadow-card">
-                <span aria-hidden="true" className="text-3xl">
-                  {s.emoji}
-                </span>
-                <p className="mt-2 font-bold text-charcoal-900">
-                  {i + 1}. {s.title}
-                </p>
-                <p className="mt-1 text-sm text-charcoal-700">{s.text}</p>
+          <ul className="no-scrollbar relative -mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-1">
+            <li>
+              <Link href="/restaurants" className="flex w-16 flex-col items-center gap-1.5 text-xs font-semibold text-brand-700">
+                <span aria-hidden="true" className={`${circle} border-brand-600 bg-brand-600 text-white`}>🍴</span>
+                All
+              </Link>
+            </li>
+            {CATEGORIES.map((c) => (
+              <li key={c.key}>
+                <Link
+                  href={`/restaurants?cuisine=${c.key}`}
+                  className="flex w-16 flex-col items-center gap-1.5 text-xs font-semibold text-charcoal-800"
+                >
+                  <span aria-hidden="true" className={`${circle} border-brand-200 bg-white shadow-sm`}>{c.emoji}</span>
+                  {c.label}
+                </Link>
               </li>
             ))}
-          </ol>
+          </ul>
         </section>
 
-        <section aria-labelledby="moka-heading" className="mt-12 rounded-3xl bg-charcoal-900 p-6 text-white">
-          <h2 id="moka-heading" className="text-2xl font-extrabold tracking-tight">
-            Meet Moka
-          </h2>
-          <p className="mt-2 text-white/80">
-            Can&apos;t decide? Moka only suggests real dishes from restaurants that are open and deliver to your
-            area, with prices straight from the menu. Moka can&apos;t confirm ingredients, allergies or halal
-            status, so please ask the restaurant about those.
-          </p>
-          <Link
-            href="/assistant"
-            className="mt-4 inline-block rounded-xl bg-brand-500 px-5 py-2.5 font-bold text-charcoal-900 hover:bg-brand-400"
-          >
-            Ask Moka what to eat
-          </Link>
+        <section className="mt-6 flex items-center gap-3 rounded-3xl bg-charcoal-900 p-4 text-white">
+          <MokaMascot variant="head" size={56} className="shrink-0" />
+          <div className="min-w-0">
+            <p className="font-extrabold">Can&apos;t decide? Ask Moka.</p>
+            <p className="mt-0.5 text-sm text-white/80">
+              Moka only suggests real dishes from open kitchens in your area. Moka can&apos;t confirm
+              ingredients, allergies or halal status, so please ask the restaurant.
+            </p>
+            <Link href="/assistant" className="mt-2 inline-block rounded-full bg-brand-500 px-4 py-1.5 text-sm font-bold text-charcoal-900 hover:bg-brand-400">
+              Ask Moka what to eat
+            </Link>
+          </div>
         </section>
 
-        <section aria-labelledby="join-heading" className="mt-6 rounded-3xl bg-brand-600 p-6 text-white">
-          <h2 id="join-heading" className="text-2xl font-extrabold tracking-tight">
-            Run a restaurant or want to ride?
-          </h2>
-          <p className="mt-2 text-white/90">
+        <HomePicks restaurants={restaurants} zones={zones} />
+
+        <section aria-labelledby="join-heading" className="mt-8 rounded-3xl bg-brand-600 p-5 text-white">
+          <h2 id="join-heading" className="text-xl font-extrabold tracking-tight">Run a restaurant or want to ride?</h2>
+          <p className="mt-2 text-sm text-white">
             Riders keep the whole delivery fee: apply with your CNIC and we verify every rider. Restaurants get a
-            new sales channel at a low commission. Create an account first, then reach out to us.
+            new sales channel at a low commission.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/rider/apply"
-              className="rounded-xl bg-white px-5 py-2.5 font-bold text-charcoal-900 hover:bg-brand-100"
-            >
+            <Link href="/signup?role=rider" className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-charcoal-900 hover:bg-brand-100">
               Ride with us
             </Link>
-            <Link
-              href="/signup"
-              className="rounded-xl border border-white/60 px-5 py-2.5 font-bold text-white hover:bg-white/10"
-            >
-              Create an account
+            <Link href="/signup?role=restaurant" className="rounded-xl border border-white/70 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
+              List your restaurant
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className="mt-12 border-t border-brand-200 pt-4 text-sm text-charcoal-700">
+      <footer className="mt-8 border-t border-brand-200 pt-4 text-sm text-charcoal-700">
         © FetchFood · Lahore · Cash on delivery ·{" "}
         <Link href="/help" className="underline">Help</Link> ·{" "}
         <Link href="/terms" className="underline">Terms</Link> ·{" "}
