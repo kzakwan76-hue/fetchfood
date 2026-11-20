@@ -684,3 +684,15 @@ Route (app)                          Revalidate  Expire
 - Tab bar icons are emoji; no custom icon set yet.
 - Layouts checked at 320 px and up (iPhone SE preset); narrower frames are not supported. Checked in DevTools only, not yet on a real phone.
 - The exact element that overflowed was not confirmed with a script; the fix worked, as reported.
+
+## M22: Splash screen
+
+- New `components/splash-screen.tsx`: full-screen orange splash with Moka (burger + sunglasses), the FetchFood name, and a loading bar that fills in about 1.8s, then fades out.
+- Wired into `app/layout.tsx`.
+- Splash pose is scoped to `.moka-splash` inside `splash-screen.tsx`, so `moka-mascot.tsx` is unchanged.
+- Shows once per browser session (sessionStorage), not on every page change.
+- Respects reduced-motion: Moka stays still holding the burger.
+
+Known limitations:
+- Brief splash flash on refresh within a session (the server renders it before the browser can check "already seen").
+- A real home-screen splash for an installed app needs a separate PWA milestone with PNG icons.

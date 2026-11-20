@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { BottomNav } from "../components/bottom-nav";
-import { MokaStyles } from "../components/moka-mascot";
+import { MokaMascot, MokaStyles } from "../components/moka-mascot";
 import { NavMenu } from "../components/nav-menu";
 import { HeaderFallback, SiteHeader } from "../components/site-header";
+import { SplashScreen } from "../components/splash-screen";
 import "./globals.css";
 
 const description =
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen antialiased">
         <MokaStyles />
+        <SplashScreen mascot={<MokaMascot variant="full" size={176} className="moka-splash" />} />
         <Suspense fallback={<HeaderFallback />}>
           <SiteHeader>
             <Suspense fallback={<span aria-hidden="true" className="h-10 w-10" />}>
