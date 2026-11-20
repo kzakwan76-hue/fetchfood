@@ -8,7 +8,7 @@ export default function TermsPage() {
     <LegalPage title="Terms of use">
       <Section title="1. Who we are" items={[
         SITE.operator,
-        "FetchFood connects customers with local restaurants and with independent riders. The restaurant makes the food. A rider delivers it.",
+        "FetchFood connects customers with local restaurants and with delivery riders. The restaurant makes the food. A FetchFood rider delivers it.",
         `Contact: ${SITE.email} or ${SITE.phone}.`,
       ]} />
       <Section title="2. Your account" items={[
@@ -27,7 +27,9 @@ export default function TermsPage() {
       ]} />
       <Section title="5. Food, allergies and Moka" items={[
         "Restaurants are responsible for their food, its quality and what it contains. FetchFood does not check ingredients, allergens or halal status.",
-        "Moka, our assistant, only suggests dishes from real menus. Moka cannot confirm ingredients, allergies or halal status. Always ask the restaurant about these.",
+        "Moka is an AI assistant. It only suggests dishes from real menus, and the dish cards, prices and fees always come from the menu itself. Moka can make mistakes and likes a joke, so double-check before you order.",
+        "Moka cannot confirm ingredients, allergies or halal status. Always ask the restaurant about these.",
+        "Messages you send to Moka are processed by a third-party AI service (Google Gemini) to write the reply. Please do not type sensitive details such as your address, phone number, passwords or health information into the chat. See our Privacy policy.",
       ]} />
       <Section title="6. Reviews" items={[
         "You can review an order only after it is delivered, one review per order. Be honest and respectful. We may remove reviews that are abusive or untrue.",

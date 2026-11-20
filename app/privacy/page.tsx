@@ -12,12 +12,13 @@ export default function PrivacyPage() {
       ]} />
       <Section title="2. What we collect" items={[
         "Customers: name, phone, email, delivery addresses, optional map pins, orders, reviews, feedback messages and notifications.",
+        "Moka chat: the messages you type to Moka, which are processed to write a reply (see section 5).",
         "Riders, in addition: full name as on the CNIC, CNIC number, father's name, date of birth, home address, emergency contact, guarantor, vehicle details, and photos of the CNIC (front and back) and a selfie.",
         "Restaurants: owner account details, menu, photos and the money records between us and the restaurant.",
-        "Technical data: login cookies, and settings stored in your browser (your cart, your chosen area).",
+        "Technical data: login cookies, and settings stored in your browser (your cart, your chosen area). If you use our Android app, it is our website inside an app and collects the same information.",
       ]} />
       <Section title="3. Why we use it" items={[
-        "To take and deliver orders, handle cash and payments, prevent fraud and theft, resolve problems, and improve the service.",
+        "To take and deliver orders, handle cash and payments, prevent fraud and theft, resolve problems, suggest dishes through Moka, and improve the service.",
         "Rider ID details are used only to check who a rider is, to protect restaurants and customers from cash loss, and to contact riders and their guarantors if cash goes missing. We may give them to the police if a crime happens.",
       ]} />
       <Section title="4. Who can see it" items={[
@@ -27,6 +28,9 @@ export default function PrivacyPage() {
       ]} />
       <Section title="5. Services we use" items={[
         "Our database and file storage are hosted by Supabase, and the site is served by our hosting provider.",
+        "Moka, our assistant, uses Google's Gemini AI service. When you chat with Moka, the text of your conversation and the list of dishes open in your area are sent to Google to write the reply. We do not send your name, phone number, address or account details, so please do not type them into the chat.",
+        "We use Google's free service tier. Under Google's terms, Google may use content sent through the free tier to improve its products and services.",
+        "Our server does not save your Moka messages and does not write them to its logs. We only log counts and error reasons.",
         "Maps use OpenStreetMap map tiles and the Leaflet library. Rider navigation opens Google Maps. These services may see your device's address and the area you look at.",
       ]} />
       <Section title="6. How long we keep it" items={[
@@ -39,7 +43,7 @@ export default function PrivacyPage() {
       ]} />
       <Section title="8. Security and children" items={[
         "We protect data with access rules in the database and private storage for documents, but no system is perfectly safe.",
-        "FetchFood is not for children who order on their own.",
+        "FetchFood, including Moka, is not for children who order on their own.",
       ]} />
     </LegalPage>
   );

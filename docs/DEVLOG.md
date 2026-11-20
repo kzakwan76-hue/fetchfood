@@ -722,3 +722,19 @@ Known limitations:
 - Every chat message uses one of the ~500 daily Gemini requests. When the limit is hit, Moka falls back to rules.
 - The funny tone is judged by eye. Tests only check the safety rules.
 - A joke that trips the guard (for example the word "nuts", or a dish name in plain text) falls back to plain rules text.
+
+## M23c: Legal pages for the pilot plan
+
+- `app/terms/page.tsx`: "independent riders" is now "delivery riders". Section 5 says Moka is an AI assistant that can make mistakes, that it cannot confirm ingredients, allergies or halal status, and that messages to Moka are processed by Google Gemini (do not type sensitive details).
+- `app/rider-agreement/page.tsx`: rewritten for salaried team riders. Pay is a fixed salary set out in a written letter. FetchFood keeps the delivery fee. Earnings shown in the app are for records only during the pilot. The Rs. 500 deposit is kept, but deductions now come from the deposit only, not from pay. Riders use their own bike and phone. Cash and delivery rules are unchanged.
+- `app/privacy/page.tsx`: added Moka chat, the Android app, Google Gemini (what is sent, what is not), the free-tier data-use sentence, and that our server does not save Moka messages. "Not for children" now includes Moka.
+- `lib/site.ts`: "Last updated" set to 21 November 2026 so all legal pages match.
+- `app/restaurant-agreement/page.tsx`: unchanged. Its own-riders section stays and only applies if switched on for a restaurant.
+
+Known limitations:
+- Contact email and phone are still the old ones (one edit in `lib/site.ts` later).
+- A lawyer still needs to review the deposit and salary wording.
+- Each rider needs a short written appointment letter (salary, hours, notice period). The agreement refers to it.
+- If we link a Google billing account, the free-tier sentence in the Privacy policy must change.
+- Recheck Google's current Gemini terms, including the under-18 clause, before launch.
+- "Our server does not save Moka messages" was checked against `route.ts` only.

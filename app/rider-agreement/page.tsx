@@ -6,20 +6,22 @@ export const metadata = { title: "Rider agreement" };
 export default function RiderAgreementPage() {
   return (
     <LegalPage title="Rider agreement">
-      <Section title="1. Your status" items={[
+      <Section title="1. Your role" items={[
         SITE.operator,
-        "You are an independent rider, not an employee of FetchFood. You use your own vehicle, phone and fuel, and you choose when to go on duty.",
+        "During the pilot you are part of the FetchFood delivery team and are paid a fixed salary. Your salary, hours and any other terms are set out in the written letter we give you. This page covers how you work in the app.",
+        "You use your own bike and phone, and you go on duty in the app for the hours agreed with us.",
         "You must be 18 to 70 years old, hold a real CNIC, and give true details. We may refuse or suspend any rider.",
       ]} />
       <Section title="2. Checks" items={[
         "We check your CNIC, selfie, address, emergency contact and guarantor before your first order. We may call you or your guarantor. You allow us to keep this data as described in our Privacy policy.",
       ]} />
-      <Section title="3. Your earnings" items={[
-        "You keep the whole delivery fee of every order you deliver, plus any bonus or incentive we add. FetchFood takes no commission from riders.",
-        "You collect the full order total in cash from the customer and hand ALL of it to FetchFood. After you have handed in your cash, we pay you what we owe you. We cannot pay you while you still hold cash.",
+      <Section title="3. Your pay and the cash you collect" items={[
+        "Your pay is the fixed salary agreed with you in writing. FetchFood keeps the delivery fee that customers pay, and you are not paid per delivery unless we agree otherwise in writing.",
+        "Amounts shown on your earnings screen in the app are for records only during the pilot. They are not paid on top of your salary unless we tell you in writing.",
+        "You collect the full order total in cash from the customer and hand ALL of it to FetchFood.",
       ]} />
       <Section title="4. Cash and deposit" items={[
-        "A refundable security deposit of Rs. 500 is collected when you are approved. We keep it until you stop riding and have handed in all your cash. If cash is missing, we may deduct it from the deposit and from what we owe you.",
+        "A refundable security deposit of Rs. 500 is collected when you are approved. We keep it until you stop riding and have handed in all your cash. If cash is missing, we may deduct it from the deposit.",
         "The default cash limit is Rs. 5,000: the cash you hold plus the orders you are carrying cannot go above it, and you cannot take new orders until you hand cash in. We may set a different limit for you.",
         "Hand your cash in every day. Holding cash for more than 24 hours will be followed up.",
       ]} />
@@ -31,7 +33,7 @@ export default function RiderAgreementPage() {
       ]} />
       <Section title="6. If something goes wrong" items={[
         "If you keep cash, steal an order, give false information or mark orders delivered that were not, we will suspend you, keep your deposit against the loss, contact your guarantor and emergency contact, and may report the matter to the police using your CNIC details.",
-        "You can stop riding at any time after handing in your cash. We can end this agreement at any time.",
+        "You may stop riding after handing in your cash, giving the notice stated in your written letter. We may end this arrangement as set out in that letter.",
       ]} />
       <Section title="7. Contact" items={[`${SITE.email}, ${SITE.phone}.`]} />
     </LegalPage>
