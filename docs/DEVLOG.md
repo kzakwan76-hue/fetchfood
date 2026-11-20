@@ -696,3 +696,29 @@ Route (app)                          Revalidate  Expire
 Known limitations:
 - Brief splash flash on refresh within a session (the server renders it before the browser can check "already seen").
 - A real home-screen splash for an installed app needs a separate PWA milestone with PNG icons.
+
+## M23a: Moka on Gemini
+
+- New `lib/assistant/gemini.ts`: calls the Gemini API with plain `fetch` (no new package). The key is sent in the `x-goog-api-key` header, never in the URL, and errors only mention the status code.
+- `lib/assistant/model.ts`: provider order is now Gemini, then Anthropic, then Ollama, then none (rules). Gemini is used when `GEMINI_API_KEY` and `GEMINI_MODEL` are both set.
+- Model: `gemini-3.1-flash-lite` (stable name, no `-preview`). Default temperature, default thinking level, 512 tokens of output headroom.
+- To use Ollama locally and save the daily quota, comment out the `GEMINI_API_KEY` line in `.env.local`.
+- `scripts/test-model.mjs` and `scripts/test-route.mjs` updated. Tests must be run with `--no-warnings --import tsx --env-file=.env.local`, like `test-all` does.
+
+Known limitations:
+- The free tier allows about 500 requests a day, shared by all users.
+- Free-tier prompts may be used by Google to improve its models. Keep addresses and phone numbers out of what we send, and say so in the privacy policy.
+
+## M23b: Moka answers first
+
+- `lib/assistant/answer.ts`: the AI now goes first. It sees the open menu (up to 40 dishes), chats, and chooses dishes by number. Rules are only the fallback (no AI, AI error or timeout, bad JSON, guard rejection, nothing orderable).
+- Every pick is checked by `applyGuard` (real, open, in budget). The reply is checked by `applyReplyGuard` (no prices, no halal or allergy claims, no stray dish names). Cards and prices always come from our data.
+- Halal, allergy and ingredient questions skip the AI and get a fixed answer: ask the restaurant.
+- `lib/assistant/prompt.ts`: new Moka persona (sarcastic, chill, funny). Off-limits jokes: health, weight, allergies, religion, family, appearance, money, budget. No swearing. Chat-only messages get a joke and no cards.
+- `scripts/test-assistant-ai.mjs` rewritten for the AI-first flow.
+- Pilot setting: `ASSISTANT_UNLOCK_ORDERS=0`, so every customer gets the AI, not only those with a delivered order.
+
+Known limitations:
+- Every chat message uses one of the ~500 daily Gemini requests. When the limit is hit, Moka falls back to rules.
+- The funny tone is judged by eye. Tests only check the safety rules.
+- A joke that trips the guard (for example the word "nuts", or a dish name in plain text) falls back to plain rules text.

@@ -19,15 +19,21 @@
 1. Import the GitHub repo. Framework: Next.js (automatic).
 2. Environment variables (Project > Settings > Environment Variables), for Production:
    NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from the PRODUCTION Supabase project.
-   ASSISTANT_UNLOCK_ORDERS=1
+   ASSISTANT_UNLOCK_ORDERS=0
+   GEMINI_API_KEY (from Google AI Studio; if Vercel offers a "Sensitive" toggle, switch it on) and GEMINI_MODEL=gemini-3.1-flash-lite
    Do NOT add TEST_EMAIL or TEST_PASSWORD, and do not set OLLAMA_MODEL (Ollama cannot run on Vercel).
 3. Pick the Vercel region closest to your Supabase region.
 4. Deploy. Then add your custom domain and update the Supabase Site URL to it.
 
 ## 3. The assistant in production
-- With no ANTHROPIC_API_KEY the site runs Moka in rules mode, which is free and works.
-- To turn the AI sentence on: create a key, SET A MONTHLY SPEND LIMIT in the Anthropic console first, confirm the exact model ID in their docs, then add ANTHROPIC_API_KEY and ANTHROPIC_MODEL in Vercel. Never paste keys into chat or commit them.
-- Only customers with a delivered order reach the AI. The in-memory rate limiter is a best-effort guard on serverless, so the spend limit is the real safety net.
+- Moka runs on Gemini (gemini-3.1-flash-lite). The AI answers first and chooses the dishes; code checks every pick. The plain rules mode is only the fallback when the AI is missing, fails or hits its limit.
+- To turn the AI on: create a key in Google AI Studio, then add GEMINI_API_KEY and GEMINI_MODEL in Vercel. Never paste keys into chat or commit them. Without the key the site still works in rules mode.
+- The free tier allows about 500 requests a day, shared by all customers, and each chat message uses one. When it runs out, Moka falls back to rules until the limit resets. Check the live limits in AI Studio (Rate limits tab).
+- On the free tier Google may use prompts to improve its models. Keep addresses and phone numbers out of what Moka sends, and mention it in /privacy.
+- Do not link a billing account to the key unless you mean to pay. If you do, set a budget alert first.
+- ASSISTANT_UNLOCK_ORDERS=0 lets every customer use the AI. Set it to 1 to restrict the AI to customers who already have a delivered order.
+- The in-memory rate limiter is a best-effort guard on serverless, so the daily Gemini cap is the real limit.
+- Halal, allergy and ingredient questions always get a fixed "ask the restaurant" answer, never an AI answer.
 
 ## 4. Smoke test after every deploy
 Sign up (confirm the email), choose an area, order, accept as the restaurant, claim as a rider, deliver, review, and ask Moka.

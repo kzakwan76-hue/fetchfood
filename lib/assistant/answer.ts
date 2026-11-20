@@ -1,7 +1,7 @@
 import { customerText, latestBudget } from "./conversation";
 import type { Turn } from "./conversation";
-import { applyReplyGuard, parseModelOutput } from "./guard";
-import { buildSassPrompt, SASS_SYSTEM_PROMPT } from "./prompt";
+import { applyGuard, applyReplyGuard, parseModelOutput } from "./guard";
+import { buildUserPrompt, selectCandidates, SYSTEM_PROMPT } from "./prompt";
 import { recommendByRules } from "./recommend";
 import type { AssistantAnswer, AssistantItem } from "./types";
 
@@ -13,23 +13,29 @@ export const MAX_REPLY_TOKENS = 120;
 
 export type FallbackReason =
   | "no_model" // no key, or the AI limit was reached
-  | "no_candidates" // the rules found nothing to recommend, so the AI is not asked
+  | "no_candidates" // nothing is orderable right now (closed, sold out or over budget)
   | "model_error" // the AI call failed or timed out
   | "bad_json" // the AI did not answer in the expected format
-  | "guard_rejected"; // the AI's sentence broke a rule (price, allergy claim, stray dish name)
+  | "guard_rejected" // the AI's answer broke a rule (price, allergy claim, stray dish name, invented dish)
+  | "claims_question"; // the customer asked about allergies, halal or ingredients: fixed answer, no AI
 
 export type AnswerOutcome = AssistantAnswer & {
-  fallback?: FallbackReason; // set when the plain rules text was used instead of the AI sentence
+  fallback?: FallbackReason; // set when the plain rules text was used instead of the AI answer
   notes: string[]; // safe to log: contains no customer text
 };
 
+// Questions we have no data for. The answer is fixed on purpose: no joke, no guessing.
+const CLAIMS_QUESTION = /\b(halal|haram|allerg\w*|gluten|lactose|dairy|vegan|nuts?|peanuts?|ingredients?)\b/i;
+const CLAIMS_REPLY =
+  "I don't have allergy, ingredient or halal information, so I can't confirm any of that. Please ask the restaurant directly before you order.";
+
 /**
- * M6e. Code chooses the dishes (keyword rules), so the cards are true by construction.
- * The AI only writes one short sentence about them, and that sentence is guarded.
- *   rules find nothing  -> rules text (no AI cost)
- *   no AI               -> rules text
- *   AI fails or its sentence is rejected -> rules text
- *   otherwise           -> AI sentence + the rules' cards
+ * M23b. The AI goes first: it sees the open menu, chats, and chooses dishes by number.
+ * Code checks everything it says, and the cards are built from our data, never from its words.
+ *   asks about halal/allergies/ingredients -> fixed answer (no AI)
+ *   no AI, or nothing orderable            -> rules text
+ *   AI fails or its answer is rejected     -> rules text
+ *   otherwise                              -> AI reply + the dishes it chose (all checked)
  */
 export async function answerQuestion(
   turns: Turn[],
@@ -45,13 +51,19 @@ export async function answerQuestion(
     notes,
   });
 
-  if (byRules.picks.length === 0) return fallbackToRules("no_candidates");
+  const lastUserText = [...turns].reverse().find((turn) => turn.role === "user")?.text ?? "";
+  if (CLAIMS_QUESTION.test(lastUserText)) {
+    return { ...byRules, reply: CLAIMS_REPLY, fallback: "claims_question", notes: [] };
+  }
+
   if (!callModel) return fallbackToRules("no_model");
 
-  const dishes = byRules.picks.map((pick) => pick.item);
+  const candidates = selectCandidates(words, items, budget);
+  if (candidates.length === 0) return fallbackToRules("no_candidates");
+
   let raw: string;
   try {
-    raw = await callModel(SASS_SYSTEM_PROMPT, buildSassPrompt(turns, dishes), MAX_REPLY_TOKENS);
+    raw = await callModel(SYSTEM_PROMPT, buildUserPrompt(turns, candidates), MAX_ANSWER_TOKENS);
   } catch {
     return fallbackToRules("model_error");
   }
@@ -59,8 +71,14 @@ export async function answerQuestion(
   const parsed = parseModelOutput(raw);
   if (!parsed) return fallbackToRules("bad_json");
 
-  const reply = applyReplyGuard(parsed.reply, dishes, items, budget);
-  if (reply === null) return fallbackToRules("guard_rejected", ["reply rejected by the guard"]);
+  // 1. Real, open, in-budget dishes only; prices and unknown dishes in the text are removed.
+  const guarded = applyGuard(parsed, candidates, budget);
+  if (!guarded) return fallbackToRules("guard_rejected", ["answer rejected by the guard"]);
 
-  return { source: "ai", reply, picks: byRules.picks, notes: [] };
+  // 2. The sentence itself: no allergy/halal claims, no dish named that is not a pick.
+  const picked = guarded.picks.map((pick) => pick.item);
+  const reply = applyReplyGuard(guarded.reply, picked, items, budget);
+  if (reply === null) return fallbackToRules("guard_rejected", ["reply rejected by the reply guard"]);
+
+  return { source: "ai", reply, picks: guarded.picks, notes: guarded.notes };
 }
