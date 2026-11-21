@@ -93,7 +93,7 @@ globalThis.fetch = async (url, init) => {
   };
 };
 
-const gemini = createGeminiCall("fake-key", "gemini-test");
+const gemini = createGeminiCall("fake-key", "gemini-test", 1);
 assert.equal(await gemini("SYS", "USR", 400), GEMINI_REPLY, "thought parts are skipped");
 assert.equal(
   seen.url,
@@ -118,6 +118,38 @@ globalThis.fetch = async () => ({
   json: async () => ({ candidates: [{ content: { parts: [{ text: "" }] } }] }),
 });
 await assert.rejects(() => gemini("a", "b", 10), "empty text must reject");
+
+// --- Gemini retries: busy servers are retried, client errors are not ---
+{
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    if (calls === 1) return { ok: false, status: 503, json: async () => ({}) };
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: GEMINI_REPLY }] } }] }),
+    };
+  };
+  assert.equal(await gemini("a", "b", 10), GEMINI_REPLY, "one 503 is retried");
+  assert.equal(calls, 2);
+
+  calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return { ok: false, status: 503, json: async () => ({}) };
+  };
+  await assert.rejects(() => gemini("a", "b", 10), /503/, "gives up after repeated 503");
+  assert.equal(calls, 3, "three attempts in total");
+
+  calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return { ok: false, status: 400, json: async () => ({}) };
+  };
+  await assert.rejects(() => gemini("a", "b", 10), /400/);
+  assert.equal(calls, 1, "client errors are not retried");
+}
 
 // --- Gemini wins when several providers are configured ---
 globalThis.fetch = async (url, init) => {

@@ -738,3 +738,16 @@ Known limitations:
 - If we link a Google billing account, the free-tier sentence in the Privacy policy must change.
 - Recheck Google's current Gemini terms, including the under-18 clause, before launch.
 - "Our server does not save Moka messages" was checked against `route.ts` only.
+
+## M23d: Gemini retries and friendlier fallback
+
+- `lib/assistant/gemini.ts`: retries transient errors (408, 429, 5xx, including Google's 503 "overloaded") up to 3 attempts with 0.7s then 1.4s pauses. Client errors (400, 403) are never retried. Each request times out after 10s and all attempts together stop at 12s.
+- `lib/assistant/answer.ts`: when the AI fails (error, bad format, guard rejection) Moka says "My duck brain lagged for a second…" instead of the rules-only sentence. The reason (status code or error name only, no customer text) is now returned in `notes`.
+- `app/api/assistant/route.ts`: the log line now includes `notes`.
+- In development only, rejected or failed AI answers print a `[moka-debug]` line in the terminal. Nothing extra is logged in production.
+- `scripts/test-model.mjs`: new checks for retry on 503, giving up after 3 attempts, and no retry on 400.
+
+Known limitations:
+- Google can still be overloaded for long stretches. Moka then shows the "lagged" line plus the simple matching cards.
+- A backup model (automatic switch when the main one is busy) is not built yet.
+- One `guard_rejected` answer was seen once during testing and never reproduced, so its cause is unknown. If it returns, the `[moka-debug]` line shows what Moka said.

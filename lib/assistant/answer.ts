@@ -28,6 +28,16 @@ export type AnswerOutcome = AssistantAnswer & {
 const CLAIMS_QUESTION = /\b(halal|haram|allerg\w*|gluten|lactose|dairy|vegan|nuts?|peanuts?|ingredients?)\b/i;
 const CLAIMS_REPLY =
   "I don't have allergy, ingredient or halal information, so I can't confirm any of that. Please ask the restaurant directly before you order.";
+// When the AI itself fails, say so in character instead of showing the rules-only sentence.
+const AI_FAILED = new Set<FallbackReason>(["model_error", "bad_json", "guard_rejected"]);
+const GLITCH_WITH_PICKS =
+  "My duck brain lagged for a second, so here's my simple matching. Still real dishes from menus that are open:";
+const GLITCH_NO_PICKS = "My duck brain lagged for a second. Say that again?";
+
+// Development only: shows in the `npm run dev` terminal, never in production logs.
+function debug(label: string, detail: string): void {
+  if (process.env.NODE_ENV === "development") console.log(`[moka-debug] ${label}: ${detail}`);
+}
 
 /**
  * M23b. The AI goes first: it sees the open menu, chats, and chooses dishes by number.
@@ -45,8 +55,13 @@ export async function answerQuestion(
   const words = customerText(turns);
   const budget = latestBudget(turns);
   const byRules = recommendByRules(words, items, budget);
-  const fallbackToRules = (fallback: FallbackReason, notes: string[] = []): AnswerOutcome => ({
+    const fallbackToRules = (fallback: FallbackReason, notes: string[] = []): AnswerOutcome => ({
     ...byRules,
+    reply: AI_FAILED.has(fallback)
+      ? byRules.picks.length > 0
+        ? GLITCH_WITH_PICKS
+        : GLITCH_NO_PICKS
+      : byRules.reply,
     fallback,
     notes,
   });
@@ -64,21 +79,33 @@ export async function answerQuestion(
   let raw: string;
   try {
     raw = await callModel(SYSTEM_PROMPT, buildUserPrompt(turns, candidates), MAX_ANSWER_TOKENS);
-  } catch {
-    return fallbackToRules("model_error");
+  } catch (error) {
+    // Our own error messages only contain a status code, never a key or customer text.
+    const why = error instanceof Error ? `${error.name}: ${error.message}` : "unknown error";
+    debug("model_error", why);
+    return fallbackToRules("model_error", [why]);
   }
 
   const parsed = parseModelOutput(raw);
-  if (!parsed) return fallbackToRules("bad_json");
+  if (!parsed) {
+    debug("bad_json", raw.slice(0, 400));
+    return fallbackToRules("bad_json");
+  }
 
   // 1. Real, open, in-budget dishes only; prices and unknown dishes in the text are removed.
   const guarded = applyGuard(parsed, candidates, budget);
-  if (!guarded) return fallbackToRules("guard_rejected", ["answer rejected by the guard"]);
+  if (!guarded) {
+    debug("guard_rejected (picks)", raw.slice(0, 400));
+    return fallbackToRules("guard_rejected", ["answer rejected by the guard"]);
+  }
 
   // 2. The sentence itself: no allergy/halal claims, no dish named that is not a pick.
   const picked = guarded.picks.map((pick) => pick.item);
   const reply = applyReplyGuard(guarded.reply, picked, items, budget);
-  if (reply === null) return fallbackToRules("guard_rejected", ["reply rejected by the reply guard"]);
+  if (reply === null) {
+    debug("guard_rejected (reply)", `${guarded.reply} | picks: ${picked.map((p) => p.name).join(", ")}`);
+    return fallbackToRules("guard_rejected", ["reply rejected by the reply guard"]);
+  }
 
   return { source: "ai", reply, picks: guarded.picks, notes: guarded.notes };
 }

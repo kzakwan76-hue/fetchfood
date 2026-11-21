@@ -117,6 +117,7 @@ export async function POST(request: Request) {
         turns: turns.length,
         items: items.length,
         picks: outcome.picks.length,
+        notes: outcome.notes,
       },
     }),
   );
